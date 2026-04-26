@@ -1,0 +1,6 @@
+@TechHouse_Industry_HostAddress = http://localhost:5138
+
+GET {{TechHouse_Industry_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,245 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\controllers\\vendascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\controllers\\vendascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\models\\vendas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\models\\vendas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\controllers\\comprascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\controllers\\comprascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\controllers\\controllersusuarioscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\controllers\\controllersusuarioscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\models\\compraitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\models\\compraitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\models\\compra.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\models\\compra.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\models\\usuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\models\\usuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\controllers\\produtoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\controllers\\produtoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\migrations\\20260421181424_vendas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\migrations\\20260421181424_vendas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\migrations\\20260421184121_addnomeusuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\migrations\\20260421184121_addnomeusuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|c:\\users\\tackto_\\desktop\\pim\\techhouse industry\\techhouse industry\\models\\produto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C346AFC-202E-6C9E-0E11-F4B33E51C9AD}|TechHouse Industry\\TechHouse Industry.csproj|solutionrelative:techhouse industry\\models\\produto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "20260421181424_Vendas.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Migrations\\20260421181424_Vendas.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Migrations\\20260421181424_Vendas.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Migrations\\20260421181424_Vendas.cs",
+              "RelativeToolTip": "TechHouse Industry\\Migrations\\20260421181424_Vendas.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T18:14:24.942Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "VendasController.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\VendasController.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Controllers\\VendasController.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\VendasController.cs",
+              "RelativeToolTip": "TechHouse Industry\\Controllers\\VendasController.cs",
+              "ViewState": "AgIAADwAAAAAAAAAAAAqwEgAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T18:00:31.718Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Vendas.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Vendas.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Models\\Vendas.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Vendas.cs",
+              "RelativeToolTip": "TechHouse Industry\\Models\\Vendas.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T17:59:35.723Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CompraItem.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\CompraItem.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Models\\CompraItem.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\CompraItem.cs",
+              "RelativeToolTip": "TechHouse Industry\\Models\\CompraItem.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T01:09:18.328Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Compra.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Compra.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Models\\Compra.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Compra.cs",
+              "RelativeToolTip": "TechHouse Industry\\Models\\Compra.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T01:08:56.032Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ControllersUsuariosController.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\ControllersUsuariosController.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Controllers\\ControllersUsuariosController.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\ControllersUsuariosController.cs",
+              "RelativeToolTip": "TechHouse Industry\\Controllers\\ControllersUsuariosController.cs",
+              "ViewState": "AgIAAF4AAAAAAAAAAAAAAGMAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T00:38:09.363Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Usuario.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Usuario.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Models\\Usuario.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Usuario.cs",
+              "RelativeToolTip": "TechHouse Industry\\Models\\Usuario.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T00:37:13.983Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ProdutosController.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\ProdutosController.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Controllers\\ProdutosController.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\ProdutosController.cs",
+              "RelativeToolTip": "TechHouse Industry\\Controllers\\ProdutosController.cs",
+              "ViewState": "AgIAAFYAAAAAAAAAAAAiwHkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T22:40:37.888Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ComprasController.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\ComprasController.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Controllers\\ComprasController.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Controllers\\ComprasController.cs",
+              "RelativeToolTip": "TechHouse Industry\\Controllers\\ComprasController.cs",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAAAIsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T01:10:58.573Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "20260421184121_AddNomeUsuario.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Migrations\\20260421184121_AddNomeUsuario.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Migrations\\20260421184121_AddNomeUsuario.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Migrations\\20260421184121_AddNomeUsuario.cs",
+              "RelativeToolTip": "TechHouse Industry\\Migrations\\20260421184121_AddNomeUsuario.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T18:41:21.175Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Data\\AppDbContext.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "TechHouse Industry\\Data\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T22:31:59.87Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Program.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Program.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Program.cs",
+              "RelativeToolTip": "TechHouse Industry\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T22:23:54.292Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\appsettings.json",
+              "RelativeDocumentMoniker": "TechHouse Industry\\appsettings.json",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\appsettings.json",
+              "RelativeToolTip": "TechHouse Industry\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAABbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-04-19T22:33:10.744Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Produto.cs",
+              "DocumentMoniker": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Produto.cs",
+              "RelativeDocumentMoniker": "TechHouse Industry\\Models\\Produto.cs",
+              "ToolTip": "C:\\Users\\Tackto_\\Desktop\\PIM\\TechHouse Industry\\TechHouse Industry\\Models\\Produto.cs",
+              "RelativeToolTip": "TechHouse Industry\\Models\\Produto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T22:30:40.537Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

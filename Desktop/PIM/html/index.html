@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechBuild</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="overlayLaterais" onclick="fecharTodasLaterais()"></div>
+
+  <header class="topo">
+    <div class="logo">TechBuild</div>
+
+    <nav class="menu-topo">
+      <button class="btn-topo" onclick="pagina('hardware')">Hardware</button>
+      <button class="btn-topo" onclick="pagina('monte')">Monte seu PC</button>
+      <button class="btn-topo" onclick="toggleFiltro()">Filtro</button>
+      <button id="btnCarrinhoTopo" class="btn-topo" onclick="toggleCarrinho()">Carrinho</button>
+      <button class="btn-topo btn-usuario" onclick="toggleUsuario()">👤</button>
+    </nav>
+  </header>
+
+  <aside id="filtro" class="painel-lateral filtro">
+    <button class="btn-fechar" onclick="toggleFiltro()">✕</button>
+
+    <h2>Filtro</h2>
+
+      <div class="bloco-filtro">
+        <label class="label-filtro">Preço</label>
+
+        <div class="range-wrapper">
+
+          <div class="range-duplo">
+            <input type="range" id="rangeMin" min="0" max="30000" value="0">
+            <input type="range" id="rangeMax" min="0" max="30000" value="30000">
+          </div>
+
+          <p id="valorRange"></p>
+
+        </div>
+      </div>
+
+      <div class="range-legenda">
+        <span>R$ 0</span>
+        <span id="valorRangeTexto">R$ 30000</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside id="carrinho" class="painel-lateral carrinho">
+    <button class="btn-fechar" onclick="toggleCarrinho()">✕</button>
+
+    <h2>Carrinho</h2>
+
+    <div class="carrinho-secao">
+      <h3>Produtos avulsos</h3>
+      <ul id="listaCarrinho"></ul>
+    </div>
+
+    <div class="carrinho-secao">
+      <h3>PC montado</h3>
+      <ul id="listaCarrinhoPC"></ul>
+    </div>
+
+    <p id="totalCarrinho" class="total-carrinho">Total: R$ 0</p>
+    <button class="btn-login" onclick="finalizarCompra()">Finalizar compra</button>
+  </aside>
+
+  <aside id="usuarioBarra" class="painel-lateral usuario-barra">
+    <button class="btn-fechar" onclick="toggleUsuario()">✕</button>
+
+    <h2>Login</h2>
+    <div id="infoUsuario" style="margin-bottom: 15px;">
+      <div id="usuarioNome" style="font-weight: bold;"></div>
+      <div id="usuarioEmail" style="font-size: 12px; opacity: 0.7;"></div>
+    </div>
+
+    <div id="usuarioLogadoArea" style="display:none;">
+      <p id="textoUsuarioLogado"></p>
+      <button class="btn-login" onclick="mostrarMinhasCompras()">Minhas compras</button>
+      <button id="btnPainelAdmin" class="btn-login" onclick="abrirPainelAdmin()" style="display:none;">Painel de controle</button>
+      <button class="btn-criar-menor" onclick="logout()">Sair</button>
+    </div>
+
+    <div id="loginArea">
+      <label>Email</label>
+      <input type="email" id="loginEmail" class="campo-login">
+
+      <label>Senha</label>
+      <input type="password" id="loginSenha" class="campo-login">
+
+      <button class="btn-login" onclick="fazerLogin()">Login</button>
+      <button class="btn-criar-menor" onclick="mostrarCriarConta()">Criar conta</button>
+    </div>
+
+    <div id="criarContaArea" style="display:none;">
+      <h3>Criar conta</h3>
+
+      <label>Nome</label>
+      <input id="criarNome" class="campo-login" placeholder="Nome de usuário"> <!-- 🔥 ADD -->
+
+      <label>Email</label>
+      <input type="email" id="criarEmail" class="campo-login">
+
+      <label>Senha</label>
+      <input type="password" id="criarSenha" class="campo-login">
+
+      <label>Confirmar senha</label>
+      <input type="password" id="confirmarSenha" class="campo-login">
+
+      <button class="btn-login" onclick="criarConta()">Criar conta</button>
+      <button class="btn-criar-menor" onclick="voltarLogin()">Voltar</button>
+    </div>
+
+    <div id="minhasComprasArea" style="display:none;">
+      <h3>Minhas compras</h3>
+      <div id="listaMinhasCompras"></div>
+      <button class="btn-criar-menor" onclick="voltarUsuarioNormal()">Voltar</button>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+  <div id="msg" class="msg-centro"></div>
+
+  <main id="hardware" class="pagina pagina-ativa">
+    <section id="produtos" class="grid-produtos"></section>
+  </main>
+
+  <main id="monte" class="pagina">
+    <section class="cabecalho-monte">
+      <h2>Monte seu PC</h2>
+
+      <div class="botoes-fixos">
+        <button onclick="filtrarTipoMonte('CPU')">CPU</button>
+        <button onclick="filtrarTipoMonte('GPU')">GPU</button>
+        <button onclick="filtrarTipoMonte('RAM')">Memória RAM</button>
+        <button onclick="filtrarTipoMonte('PlacaMae')">Placa-mãe</button>
+        <button onclick="filtrarTipoMonte('SSD')">SSD</button>
+        <button onclick="filtrarTipoMonte('HD')">HD</button>
+        <button onclick="filtrarTipoMonte('SSDNVME')">NVMe</button>
+        <button onclick="filtrarTipoMonte('Fonte')">Fonte</button>
+        <button onclick="filtrarTipoMonte('Gabinete')">Gabinete</button>
+      </div>
+
+      <div class="barra-busca-estoque" style="
+          background:#020617;
+          padding:10px 0;
+          margin-top:10px;
+        ">
+        <input 
+          type="text" 
+          id="buscaMonte" 
+          placeholder="Buscar produto por nome..."
+          class="campo-login"
+          oninput="filtrarProdutosMonte()"
+        >
+      </div>
+    </section>
+
+    <section id="produtosMonte" class="grid-produtos"></section>
+    
+    <section class="resumo-monte">
+      <h3>Seu PC</h3>
+      <ul id="listaMonte"></ul>
+
+      <p id="totalMonte" class="total-carrinho">Total do PC: R$ 0</p>
+
+      <button class="btn-finalizar" onclick="finalizarPC()">
+        Adicionar montagem ao carrinho
+      </button>
+    </section>
+  </main>
+
+  <main id="painel" class="pagina">
+    <section class="cabecalho-monte">
+      <h2>Painel de Controle</h2>
+
+      <div class="botoes-fixos">
+        <button onclick="mostrarSecaoPainel('estoque')">Estoque</button>
+        <button onclick="mostrarSecaoPainel('novoProduto')">Novo produto</button>
+        <button onclick="mostrarSecaoPainel('criarAdmin')">Criar Admin</button>
+        <button onclick="mostrarSecaoPainel('vendas')">Vendas</button>
+      </div>
+
+      <div class="barra-busca-estoque" style="
+          background:#020617;
+          padding:10px 0;
+          margin-top:10px;
+        ">
+        <input 
+          type="text" 
+          id="buscaVendas" 
+          placeholder="Buscar por ID, nome ou email..."
+          class="campo-login"
+          oninput="filtrarVendas()"
+        >
+        <input
+          type="text"
+          id="buscaEstoque"
+          placeholder="Buscar por nome ou ID..."
+          class="campo-login"
+          oninput="filtrarEstoque()"
+          style="display:none;"
+        >
+      </div>
+    </section>
+      <div id="secaoVendas" class="pagina">
+    <h2>Histórico de Vendas</h2>
+    <table class="tabela-estoque">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Itens</th>
+          <th>Qtd total</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Data</th>   
+        </tr>
+      </thead>
+      <tbody id="tabelaVendas"></tbody>
+    </table>
+
+  </div>
+    <div id="secaoEstoque" style="display:block;">
+      <div id="listaEstoque"></div>
+    </div>
+
+    <div id="secaoNovoProduto" style="display:none;">
+      <h3>Novo produto</h3>
+
+      <input id="novoNome" placeholder="Nome" class="campo-login">
+      <select id="novoTipo" class="campo-login">
+        <option value="CPU">CPU</option>
+        <option value="GPU">GPU</option>
+        <option value="RAM">RAM</option>
+        <option value="PlacaMae">Placa-mãe</option>
+        <option value="SSD">SSD</option>
+        <option value="HD">HD</option>
+        <option value="SSDNVME">NVMe</option>
+        <option value="Fonte">Fonte</option>
+        <option value="Gabinete">Gabinete</option>
+      </select>
+      <input id="novoPreco" type="number" placeholder="Preço" class="campo-login">
+      <input id="novoSocket" placeholder="Socket" class="campo-login">
+      <input id="novoConsumo" type="number" placeholder="Consumo energia" class="campo-login">
+      <input id="novoQuantidade" type="number" placeholder="Quantidade" class="campo-login">
+      <input id="novoPotencia" type="number" placeholder="Potência (apenas fonte)" class="campo-login">
+      <input type="file" id="novoImagemFile" accept="image/png, image/jpeg" class="input-file">
+
+      <button class="btn-login" onclick="criarProduto()">Criar produto</button>
+    </div>
+
+    <div id="secaoCriarAdmin" style="display:none;">
+      <h3>Criar administrador</h3>
+
+      <label>Email</label>
+      <input type="email" id="adminEmail" class="campo-login">
+
+      <label>Senha</label>
+      <input type="password" id="adminSenha" class="campo-login">
+
+      <label>Confirmar senha</label>
+      <input type="password" id="adminConfirmarSenha" class="campo-login">
+
+      <button class="btn-login" onclick="criarAdmin()">Criar Admin</button>
+    </div>
+  </main>
+
+  <script>
+    const API = "https://localhost:7011/api/Produtos";
+
+    let produtos = [];
+    let carrinho = [];
+    let carrinhoPC = [];
+    let monte = [];
+    let tipoAtualMonte = null;
+    let usuarioLogado = null;
+    let produtosEstoque = [];
+    let produtoEditandoId = null;
+    let vendasCache = [];
+
+    function corStatus(status) {
+      if (status === "Concluida") return "#00ff88";
+      if (status === "Cancelada") return "#ff4d4d";
+      if (status === "Parcial") return "#ffaa00";
+      return "#ccc";
+    }
+
+    function toggleVenda(compraId) {
+      const el = document.getElementById(`detalhe-${compraId}`);
+      if (!el) return;
+
+      el.style.display = el.style.display === "none" ? "table-row" : "none";
+    }
+
+    function isAdminLogin() {
+      return !!(usuarioLogado && usuarioLogado.isAdmin === true);
+    }
+
+    function abrirOverlay() {
+      document.getElementById("overlayLaterais").classList.add("ativo");
+    }
+
+    function fecharOverlay() {
+      document.getElementById("overlayLaterais").classList.remove("ativo");
+    }
+
+    function resetarBarraUsuario() {
+      document.getElementById("minhasComprasArea").style.display = "none";
+      document.getElementById("criarContaArea").style.display = "none";
+
+      const btnPainelAdmin = document.getElementById("btnPainelAdmin");
+
+      if (usuarioLogado) {
+        document.getElementById("usuarioLogadoArea").style.display = "block";
+        document.getElementById("loginArea").style.display = "none";
+        btnPainelAdmin.style.display = isAdminLogin() ? "block" : "none";
+      } else {
+        document.getElementById("usuarioLogadoArea").style.display = "none";
+        document.getElementById("loginArea").style.display = "block";
+        btnPainelAdmin.style.display = "none";
+      }
+    }
+
+    function fecharTodasLaterais() {
+      document.getElementById("filtro").classList.remove("ativo");
+      document.getElementById("carrinho").classList.remove("ativo");
+      document.getElementById("usuarioBarra").classList.remove("ativo");
+      fecharOverlay();
+      resetarBarraUsuario();
+    }
+
+    function toggleFiltro() {
+      const el = document.getElementById("filtro");
+      const vaiAbrir = !el.classList.contains("ativo");
+      fecharTodasLaterais();
+
+      if (vaiAbrir) {
+        el.classList.add("ativo");
+        abrirOverlay();
+      }
+    }
+
+    function toggleCarrinho() {
+      const el = document.getElementById("carrinho");
+      const vaiAbrir = !el.classList.contains("ativo");
+      fecharTodasLaterais();
+
+      if (vaiAbrir) {
+        el.classList.add("ativo");
+        abrirOverlay();
+      }
+    }
+
+    function toggleUsuario() {
+      const el = document.getElementById("usuarioBarra");
+      const vaiAbrir = !el.classList.contains("ativo");
+      fecharTodasLaterais();
+
+      if (vaiAbrir) {
+        resetarBarraUsuario();
+
+        let usuario = null;
+
+        try {
+          usuario = JSON.parse(localStorage.getItem("usuario"));
+        } catch {
+          usuario = null;
+        }
+
+        if (usuario) {
+          let nome = usuario.nome || "Usuário";
+
+          // 🔥 adiciona tag de admin
+          if (usuario.isAdmin) {
+            nome += " (Admin)";
+          }
+
+          document.getElementById("usuarioNome").innerText = nome;
+          document.getElementById("usuarioEmail").innerText = usuario.email;
+
+        } else {
+          document.getElementById("usuarioNome").innerText = "Não logado";
+          document.getElementById("usuarioEmail").innerText = "";
+        }
+
+        el.classList.add("ativo");
+        abrirOverlay();
+      }
+    }
+
+    function abrirPainelAdmin() {
+      if (!isAdminLogin()) {
+        msg("Acesso permitido apenas para administrador.");
+        return;
+      }
+
+      fecharTodasLaterais();
+      pagina('painel');
+      mostrarSecaoPainel('estoque');
+      carregarEstoque();
+    }
+    async function carregarVendas() {
+      try {
+        const res = await fetch("https://localhost:7011/api/Vendas");
+        const vendas = await res.json();
+
+        vendasCache = vendas;
+
+        if (vendas.length === 0) {
+          document.getElementById("tabelaVendas").innerHTML =
+            "<tr><td colspan='6'>Nenhuma venda</td></tr>";
+          return;
+        }
+
+        // 🔥 ESSA LINHA QUE FALTAVA
+        renderizarVendas(vendas);
+
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+      function filtrarVendas() {
+        const termo = document.getElementById("buscaVendas").value.toLowerCase();
+
+        const filtradas = vendasCache.filter(v =>
+          String(v.compraId).includes(termo) ||
+          (v.usuarioNome && v.usuarioNome.toLowerCase().includes(termo))
+        );
+
+        renderizarVendas(filtradas);
+      }
+
+    function renderizarVendas(vendas) {
+
+      const tabela = document.getElementById("tabelaVendas");
+      tabela.innerHTML = "";
+
+      const agrupado = {};
+
+      // 🔥 1. AGRUPAR
+      vendas.forEach(v => {
+        if (!agrupado[v.compraId]) {
+          agrupado[v.compraId] = {
+            compraId: v.compraId,
+            data: v.data,
+            usuario: v.usuarioNome,
+            itens: [],
+            status: null
+          };
+        }
+
+        agrupado[v.compraId].itens.push(v);
+      });
+
+      // 🔥 2. CALCULAR STATUS
+      Object.values(agrupado).forEach((c, index) => {
+        const itens = c.itens;
+
+        const todosCancelados = itens.every(i => (i.status || "") === "Cancelada");
+        const todosConcluidos = itens.every(i => (i.status || "") === "Concluida");
+
+        if (todosCancelados) c.status = "Cancelada";
+        else if (todosConcluidos) c.status = "Concluida";
+        else c.status = "Parcial";
+      });
+
+      // 🔥 3. RENDERIZAR
+      Object.values(agrupado).forEach((c, index) => {
+
+        const total = c.itens.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+        const quantidadeTotal = c.itens.reduce((s, i) => s + i.quantidade, 0);
+        let itensVenda = c.itens.filter(i => i.origem === "Carrinho");
+        let itensPC = c.itens.filter(i => i.origem === "MontePC");
+
+
+        tabela.innerHTML += `
+          <tr onclick="toggleVenda(${c.compraId})" class="linha-venda ${index % 2 === 0 ? 'par' : 'impar'}">
+            <td>#${String(c.compraId).padStart(6, '0')}</td>
+            <td>${c.itens.length} item(s)</td>
+            <td>${quantidadeTotal}</td>
+            <td>R$ ${total.toLocaleString("pt-BR")}</td>
+            <td style="color:${corStatus(c.status)}">${c.status}</td>
+            <td>${c.data ? new Date(c.data).toLocaleString("pt-BR") : "-"}</td>
+          </tr>
+
+          <tr id="detalhe-${c.compraId}" style="display:none;">
+            <td colspan="6">
+              <div class="detalhe-venda">
+
+                <p><b>Usuário:</b> ${c.usuario || "Desconhecido"}</p>
+
+                ${itensVenda.length > 0 ? `
+                  <p style="margin-top:10px;"><b>🛒 Venda:</b></p>
+                  ${itensVenda.map(i => `
+                    <p>• ${i.produtoNome} x${i.quantidade} - R$ ${i.preco.toLocaleString("pt-BR")}</p>
+                  `).join("")}
+                ` : ""}
+
+                ${itensPC.length > 0 ? `
+                  <p style="margin-top:10px;"><b>🖥️ Monte seu PC:</b></p>
+                  ${itensPC.map(i => `
+                    <p>• ${i.produtoNome} x${i.quantidade} - R$ ${i.preco.toLocaleString("pt-BR")}</p>
+                  `).join("")}
+                ` : ""}
+
+                <p style="margin-top:10px;"><b>Total:</b> R$ ${total.toLocaleString("pt-BR")}</p>
+
+                ${c.status !== "Cancelada" ? `
+                  <button onclick="event.stopPropagation(); cancelarCompra(${c.compraId})">
+                    Cancelar compra
+                  </button>
+                ` : `<span style="color:red">Cancelada</span>`}
+
+              </div>
+            </td>
+                      </tr>
+        `;
+      });
+    }
+
+    function mostrarSecaoPainel(secao) {
+      document.getElementById("secaoEstoque").style.display = "none";
+      document.getElementById("secaoNovoProduto").style.display = "none";
+      document.getElementById("secaoCriarAdmin").style.display = "none";
+      document.getElementById("secaoVendas").style.display = "none"; // 🔥 ADD
+
+      // Ocultar todas as barras de busca
+      document.getElementById("buscaVendas").style.display = "none";
+      document.getElementById("buscaEstoque").style.display = "none";
+
+      if (secao === "estoque") {
+        document.getElementById("secaoEstoque").style.display = "block";
+        document.getElementById("buscaEstoque").style.display = "block";
+        carregarEstoque();
+      }
+
+      if (secao === "novoProduto") {
+        document.getElementById("secaoNovoProduto").style.display = "block";
+      }
+
+      if (secao === "criarAdmin") {
+        document.getElementById("secaoCriarAdmin").style.display = "block";
+      }
+
+      // 🔥 NOVO
+      if (secao === "vendas") {
+        document.getElementById("secaoVendas").style.display = "block";
+        document.getElementById("buscaVendas").style.display = "block";
+        carregarVendas();
+      }
+    }
+
+    function precisaEstarLogado() {
+      if (!usuarioLogado) {
+        msg("Você precisa fazer login antes.");
+        return true;
+      }
+      return false;
+    }
+
+    function atualizarVisibilidadeCarrinho() {
+      const btnCarrinho = document.getElementById("btnCarrinhoTopo");
+      if (!btnCarrinho) return;
+
+      btnCarrinho.style.display = usuarioLogado ? "inline-block" : "none";
+    }
+
+    function atualizarAreaUsuario() {
+      const areaLogado = document.getElementById("usuarioLogadoArea");
+      const loginArea = document.getElementById("loginArea");
+      const criarContaArea = document.getElementById("criarContaArea");
+      const minhasComprasArea = document.getElementById("minhasComprasArea");
+      const texto = document.getElementById("textoUsuarioLogado");
+      const btnPainelAdmin = document.getElementById("btnPainelAdmin");
+
+      if (usuarioLogado) {
+        areaLogado.style.display = "block";
+        loginArea.style.display = "none";
+        criarContaArea.style.display = "none";
+        minhasComprasArea.style.display = "none";
+        btnPainelAdmin.style.display = isAdminLogin() ? "block" : "none";
+      } else {
+        areaLogado.style.display = "none";
+        loginArea.style.display = "block";
+        criarContaArea.style.display = "none";
+        minhasComprasArea.style.display = "none";
+        btnPainelAdmin.style.display = "none";
+      }
+    }
+
+    function logout() {
+      usuarioLogado = null;
+      localStorage.removeItem("usuario");
+
+      carrinho = [];
+      carrinhoPC = [];
+      monte = [];
+
+      atualizarCarrinho();
+      atualizarMonte();
+
+      atualizarAreaUsuario();
+      atualizarVisibilidadeCarrinho();
+
+      fecharTodasLaterais();
+      pagina('hardware');
+
+      msg("Logout realizado com sucesso.");
+    }
+
+    function mostrarCriarConta() {
+      document.getElementById("loginArea").style.display = "none";
+      document.getElementById("criarContaArea").style.display = "block";
+      document.getElementById("usuarioLogadoArea").style.display = "none";
+      document.getElementById("minhasComprasArea").style.display = "none";
+    }
+
+    function voltarLogin() {
+      document.getElementById("criarContaArea").style.display = "none";
+      document.getElementById("loginArea").style.display = "block";
+    }
+
+    function voltarUsuarioNormal() {
+      document.getElementById("minhasComprasArea").style.display = "none";
+      atualizarAreaUsuario();
+    }
+
+    async function criarConta() {
+      const nome = document.getElementById("criarNome").value.trim();
+      const email = document.getElementById("criarEmail").value.trim();
+      const senha = document.getElementById("criarSenha").value.trim();
+      const confirmarSenha = document.getElementById("confirmarSenha").value.trim();
+
+      if (!nome || !email || !senha || !confirmarSenha) {
+        msg("Preencha todos os campos.");
+        return;
+      }
+
+      if (nome.length < 3) {
+        msg("O nome deve ter no mínimo 3 caracteres.");
+        return;
+      }
+
+      if (!email.endsWith("@gmail.com") && !email.endsWith("@hotmail.com")) {
+        msg("Email inválido. Use apenas @gmail.com ou @hotmail.com.");
+        return;
+      }
+
+      if (senha.length < 5) {
+        msg("A senha deve ter no mínimo 5 caracteres.");
+        return;
+      }
+
+      const senhaValida = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$/;
+      if (!senhaValida.test(senha)) {
+        msg("A senha só pode conter caracteres válidos.");
+        return;
+      }
+
+      if (senha !== confirmarSenha) {
+        msg("As senhas não coincidem.");
+        return;
+      }
+
+      try {
+        const res = await fetch("https://localhost:7011/api/Usuarios/criar-conta", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nome, email, senha }) // 🔥 ADD NOME AQUI
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          msg(data.mensagem || "Não foi possível criar a conta.");
+          return;
+        }
+
+        msg("Conta criada com sucesso.");
+
+        // limpa campos
+        document.getElementById("criarNome").value = "";
+        document.getElementById("criarEmail").value = "";
+        document.getElementById("criarSenha").value = "";
+        document.getElementById("confirmarSenha").value = "";
+
+        voltarLogin();
+
+      } catch (e) {
+        msg("Erro ao criar conta.");
+        console.error(e);
+      }
+    }
+
+    async function fazerLogin() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const senha = document.getElementById("loginSenha").value.trim();
+
+      if (!email || !senha) {
+        msg("Preencha email e senha.");
+        return;
+      }
+
+      try {
+        const res = await fetch("https://localhost:7011/api/Usuarios/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          msg(data.mensagem || "Senha inválida.");
+          return;
+        }
+
+        localStorage.setItem("usuario", JSON.stringify(data));
+
+        // 🔥 ESSENCIAL
+        usuarioLogado = data;
+        atualizarVisibilidadeCarrinho();
+
+        msg("Login realizado com sucesso.");
+
+        toggleUsuario();
+
+      } catch (e) {
+        msg("Erro ao fazer login.");
+        console.error(e);
+      }
+    }
+
+    async function criarAdmin() {
+      if (!isAdminLogin()) {
+        msg("Apenas administrador pode criar outro administrador.");
+        return;
+      }
+
+      const email = document.getElementById("adminEmail").value.trim();
+      const senha = document.getElementById("adminSenha").value.trim();
+      const confirmarSenha = document.getElementById("adminConfirmarSenha").value.trim();
+
+      if (!email || !senha || !confirmarSenha) {
+        msg("Preencha todos os campos.");
+        return;
+      }
+
+      if (!email.endsWith("@gmail.com") && !email.endsWith("@hotmail.com")) {
+        msg("Email inválido. Use apenas @gmail.com ou @hotmail.com.");
+        return;
+      }
+
+      if (senha.length < 5) {
+        msg("A senha deve ter no mínimo 5 caracteres.");
+        return;
+      }
+
+      const senhaValida = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$/;
+      if (!senhaValida.test(senha)) {
+        msg("A senha só pode conter letras, números e caracteres especiais permitidos.");
+        return;
+      }
+
+      if (senha !== confirmarSenha) {
+        msg("As senhas não coincidem.");
+        return;
+      }
+
+      try {
+        const res = await fetch("https://localhost:7011/api/Usuarios/criar-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            adminId: usuarioLogado.id,
+            email,
+            senha,
+            confirmarSenha
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          msg(data.mensagem || "Não foi possível criar o administrador.");
+          return;
+        }
+
+        msg("Administrador criado com sucesso.");
+        document.getElementById("adminEmail").value = "";
+        document.getElementById("adminSenha").value = "";
+        document.getElementById("adminConfirmarSenha").value = "";
+      } catch (e) {
+        msg("Erro ao criar administrador.");
+        console.error(e);
+      }
+    }
+
+    async function carregar() {
+      try {
+        const res = await fetch(API);
+        if (!res.ok) throw new Error("Falha ao carregar produtos.");
+        produtos = await res.json();
+        mostrarHardware(produtos);
+      } catch (e) {
+        msg("Não foi possível carregar os produtos. Verifique se a API está rodando.");
+        console.error(e);
+      }
+      if (!tipoAtualMonte) {
+      mostrarMonte(produtos); // 🔥 mostra tudo
+    }
+    }
+
+    function pagina(nome) {
+      document.getElementById("hardware").classList.remove("pagina-ativa");
+      document.getElementById("monte").classList.remove("pagina-ativa");
+      document.getElementById("painel").classList.remove("pagina-ativa");
+      document.getElementById(nome).classList.add("pagina-ativa");
+
+      // Quando abrir o painel, carregar vendas
+      if (nome === "painel") {
+        mostrarSecaoPainel("vendas");
+      }
+    }
+
+    function toast(texto) {
+      msg(texto);
+    }
+
+    function msg(texto) {
+      const m = document.getElementById("msg");
+      m.innerText = texto;
+      m.classList.add("ativo");
+      setTimeout(() => m.classList.remove("ativo"), 2400);
+    }
+
+    function formatarPreco(valor) {
+      return Number(valor).toLocaleString("pt-BR");
+    }
+
+    function nomeTipoExibicao(tipo) {
+      if (tipo === "RAM" || tipo === "Memoria RAM") return "Memória RAM";
+      if (tipo === "PlacaMae") return "Placa-mãe";
+      if (tipo === "SSDNVME") return "NVMe";
+      return tipo;
+    }
+
+    function tipoEquivalente(tipo) {
+      if (tipo === "RAM" || tipo === "Memoria RAM") return "RAM";
+      return tipo;
+    }
+
+    function imgSrc(p) {
+      return p.imagemUrl || "";
+    }
+
+    function mostrarHardware(lista) {
+      const div = document.getElementById("produtos");
+      div.innerHTML = "";
+
+      lista.forEach((p) => {
+        div.innerHTML += `
+          <div class="card">
+            <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
+            <h3>${p.nome}</h3>
+            <p>${nomeTipoExibicao(p.tipo)}</p>
+            <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+            <button onclick='addCarrinho(${JSON.stringify(p)})'>Comprar</button>
+          </div>
+        `;
+      });
+    }
+
+    function addCarrinho(p) {
+      if (precisaEstarLogado()) return;
+
+      carrinho.push(p);
+      atualizarCarrinho();
+      toast("Produto adicionado ao carrinho.");
+    }
+
+    function atualizarCarrinho() {
+      const lista = document.getElementById("listaCarrinho");
+      const listaPC = document.getElementById("listaCarrinhoPC");
+      const total = document.getElementById("totalCarrinho");
+
+      lista.innerHTML = "";
+      listaPC.innerHTML = "";
+
+      let soma = 0;
+
+      carrinho.forEach((p, i) => {
+        soma += Number(p.preco);
+        lista.innerHTML += `
+          <li>
+            ${p.nome} - R$ ${formatarPreco(p.preco)}
+            <button class="btn-mini" onclick="removerCarrinho(${i})">Remover</button>
+          </li>
+        `;
+      });
+
+      carrinhoPC.forEach((p, i) => {
+        soma += Number(p.preco);
+        listaPC.innerHTML += `
+          <li>
+            ${p.nome} - R$ ${formatarPreco(p.preco)}
+            <button class="btn-mini" onclick="removerCarrinhoPC(${i})">Remover</button>
+          </li>
+        `;
+      });
+
+      total.innerText = "Total: R$ " + formatarPreco(soma);
+    }
+
+    function removerCarrinho(index) {
+      carrinho.splice(index, 1);
+      atualizarCarrinho();
+      toast("Item removido do carrinho.");
+    }
+
+    function removerCarrinhoPC(index) {
+      carrinhoPC.splice(index, 1);
+      atualizarCarrinho();
+      toast("Item removido do carrinho.");
+    }
+
+    function filtrarTipoMonte(tipo) {
+      tipoAtualMonte = tipo;
+
+      const precoMax = Number(document.getElementById("rangeMax").value);
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+
+      const lista = produtos.filter((p) => {
+        const correspondeTipo = tipoEquivalente(p.tipo) === tipo;
+        const correspondePreco = Number(p.preco) <= precoMax;
+        const correspondeNome = !termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca));
+        return correspondeTipo && correspondePreco && correspondeNome;
+      });
+
+      mostrarMonte(lista);
+    }
+
+    function filtrarProdutosMonte() {
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+      const precoMax = Number(document.getElementById("rangeMax").value);
+
+      let lista;
+      if (tipoAtualMonte) {
+        lista = produtos.filter((p) => {
+          const correspondeTipo = tipoEquivalente(p.tipo) === tipoAtualMonte;
+          const correspondePreco = Number(p.preco) <= precoMax;
+          const correspondeNome = !termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca));
+          return correspondeTipo && correspondePreco && correspondeNome;
+        });
+      } else {
+        lista = produtos.filter((p) => {
+          const correspondePreco = Number(p.preco) <= precoMax;
+          const correspondeNome = !termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca));
+          return correspondePreco && correspondeNome;
+        });
+      }
+
+      mostrarMonte(lista);
+    }
+
+    function mostrarMonte(lista) {
+      const div = document.getElementById("produtosMonte");
+      div.innerHTML = "";
+
+      lista.forEach((p) => {
+        const qtd = quantidadeProdutoNoMonte(p.nome);
+        const nomeTipo = nomeTipoExibicao(p.tipo);
+        const tipoBase = tipoEquivalente(p.tipo);
+        const tipoQtd = ["RAM", "SSD", "HD", "SSDNVME"];
+
+        if (tipoQtd.includes(tipoBase)) {
+          div.innerHTML += `
+            <div class="card">
+              <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
+              <h3>${p.nome}</h3>
+              <p>${nomeTipo}</p>
+              <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+              <div class="controle-qtd">
+                <button onclick='removerUnidadeMonte(${JSON.stringify(p)})'>-</button>
+                <span class="qtd-badge">${qtd}</span>
+                <button onclick='adicionarUnidadeMonte(${JSON.stringify(p)})'>+</button>
+              </div>
+            </div>
+          `;
+        } else {
+          const jaSelecionado = qtd > 0;
+          div.innerHTML += `
+            <div class="card">
+              <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
+              <h3>${p.nome}</h3>
+              <p>${nomeTipo}</p>
+              <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+              ${
+                jaSelecionado
+                  ? `<button class="btn-remover" onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Remover</button>`
+                  : `<button onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Adicionar</button>`
+              }
+            </div>
+          `;
+        }
+      });
+    }
+
+    function quantidadeProdutoNoMonte(nome) {
+      return monte.filter((x) => x.nome === nome).length;
+    }
+
+    function contarTiposNoMonte(tipos) {
+      return monte.filter((x) => tipos.includes(tipoEquivalente(x.tipo))).length;
+    }
+
+    function validarFonteSuportaSetup(pecas, novaFonte = null) {
+      let fonte = novaFonte;
+
+      if (!fonte) {
+        fonte = pecas.find((p) => tipoEquivalente(p.tipo) === "Fonte");
+      }
+
+      if (!fonte) return true;
+
+      const potencia = Number(fonte.potencia || 0);
+
+      const consumoTotal = pecas.reduce(
+        (soma, p) => soma + Number(p.consumoEnergia || 0),
+        0
+      );
+
+      const potenciaMinima = Math.ceil(consumoTotal * 1.3);
+
+      if (potencia < potenciaMinima) {
+        msg(`A fonte selecionada não suporta esta configuração. É necessária uma fonte de pelo menos ${potenciaMinima}W.`);
+        return false;
+      }
+
+      return true;
+    }
+
+    function validarTipo(tipo) {
+      const qtd = monte.filter((x) => tipoEquivalente(x.tipo) === tipo).length;
+      const qtdSSDHD = contarTiposNoMonte(["SSD", "HD"]);
+      const qtdNVME = contarTiposNoMonte(["SSDNVME"]);
+
+      if (tipo === "CPU" && qtd >= 1) {
+        msg("É permitido apenas 1 processador na montagem.");
+        return false;
+      }
+
+      if (tipo === "GPU" && qtd >= 1) {
+        msg("É permitida apenas 1 placa de vídeo na montagem.");
+        return false;
+      }
+
+      if (tipo === "PlacaMae" && qtd >= 1) {
+        msg("É permitida apenas 1 placa-mãe na montagem.");
+        return false;
+      }
+
+      if (tipo === "Fonte" && qtd >= 1) {
+        msg("É permitida apenas 1 fonte na montagem.");
+        return false;
+      }
+
+      if (tipo === "Gabinete" && qtd >= 1) {
+        msg("É permitido apenas 1 gabinete na montagem.");
+        return false;
+      }
+
+      if (tipo === "RAM" && qtd >= 4) {
+        msg("É permitido no máximo 4 módulos de memória RAM.");
+        return false;
+      }
+
+      if ((tipo === "SSD" || tipo === "HD") && qtdSSDHD >= 4) {
+        msg("É permitido no máximo 4 unidades somando SSD e HD.");
+        return false;
+      }
+
+      if (tipo === "SSDNVME" && qtdNVME >= 2) {
+        msg("É permitido no máximo 2 SSDs NVMe.");
+        return false;
+      }
+
+      return true;
+    }
+
+    function toggleSelecionadoSimples(p) {
+      if (precisaEstarLogado()) return;
+
+      const jaSelecionado = monte.some((x) => x.nome === p.nome);
+      const tipo = tipoEquivalente(p.tipo);
+
+      if (jaSelecionado) {
+        monte = monte.filter((x) => x.nome !== p.nome);
+        toast("Peça removida da montagem.");
+      } else {
+        if (!validarTipo(tipo)) return;
+
+        if (tipo === "Fonte") {
+          const pecasSemFonteAtual = monte.filter(
+            (x) => tipoEquivalente(x.tipo) !== "Fonte"
+          );
+
+          if (!validarFonteSuportaSetup(pecasSemFonteAtual, p)) return;
+
+          monte = pecasSemFonteAtual;
+          monte.push(p);
+        } else {
+          const tentativa = [...monte, p];
+          if (!validarFonteSuportaSetup(tentativa)) return;
+
+          monte.push(p);
+        }
+
+        toast("Peça adicionada ao seu PC.");
+      }
+
+      atualizarMonte();
+      mostrarMonte(produtos.filter((x) => tipoEquivalente(x.tipo) === tipo));
+    }
+
+    function adicionarUnidadeMonte(p) {
+      if (precisaEstarLogado()) return;
+
+      const tipo = tipoEquivalente(p.tipo);
+      if (!validarTipo(tipo)) return;
+
+      const tentativa = [...monte, p];
+      if (!validarFonteSuportaSetup(tentativa)) return;
+
+      monte.push(p);
+      atualizarMonte();
+      mostrarMonte(produtos.filter((x) => tipoEquivalente(x.tipo) === tipo));
+      toast("Unidade adicionada à montagem.");
+    }
+
+    function removerUnidadeMonte(p) {
+      const index = monte.findIndex((x) => x.nome === p.nome);
+      if (index === -1) return;
+
+      monte.splice(index, 1);
+      atualizarMonte();
+      mostrarMonte(produtos.filter((x) => tipoEquivalente(x.tipo) === tipoEquivalente(p.tipo)));
+      toast("Unidade removida da montagem.");
+    }
+
+    function atualizarMonte() {
+      const lista = document.getElementById("listaMonte");
+      const total = document.getElementById("totalMonte");
+
+      lista.innerHTML = "";
+
+      let soma = 0;
+
+      monte.forEach((p) => {
+        soma += Number(p.preco);
+      });
+
+      const agrupados = {};
+
+      monte.forEach((p) => {
+        if (!agrupados[p.nome]) {
+          agrupados[p.nome] = {
+            produto: p,
+            quantidade: 0
+          };
+        }
+        agrupados[p.nome].quantidade++;
+      });
+
+      Object.values(agrupados).forEach((item) => {
+        const p = item.produto;
+        const qtd = item.quantidade;
+        const subtotal = Number(p.preco) * qtd;
+
+        lista.innerHTML += `
+          <li>
+            ${p.nome} ${qtd > 1 ? `x${qtd}` : ""} - R$ ${formatarPreco(subtotal)}
+            <button class="btn-mini" onclick='removerUnidadeMonte(${JSON.stringify(p)})'>-</button>
+          </li>
+        `;
+      });
+
+      total.innerText = "Total do PC: R$ " + formatarPreco(soma);
+    }
+
+    function finalizarPC() {
+      if (precisaEstarLogado()) return;
+
+      if (monte.length === 0) {
+        msg("Adicione ao menos uma peça antes de finalizar a montagem.");
+        return;
+      }
+
+      if (!montagemCompleta()) {
+        msg("Para finalizar a montagem, é necessário adicionar todos os componentes obrigatórios: processador, placa-mãe, memória RAM, armazenamento, fonte e gabinete.");
+        return;
+      }
+
+      carrinhoPC.push(...monte);
+      monte = [];
+      atualizarMonte();
+      atualizarCarrinho();
+      document.getElementById("produtosMonte").innerHTML = "";
+      msg("Montagem adicionada ao carrinho.");
+    }
+
+    function montagemCompleta() {
+      const obrigatorios = ["CPU", "PlacaMae", "RAM", "Fonte", "Gabinete"];
+
+      for (const tipo of obrigatorios) {
+        const existe = monte.some((p) => tipoEquivalente(p.tipo) === tipo);
+        if (!existe) return false;
+      }
+
+      const temArmazenamento =
+        monte.some((p) => tipoEquivalente(p.tipo) === "SSD") ||
+        monte.some((p) => tipoEquivalente(p.tipo) === "HD") ||
+        monte.some((p) => tipoEquivalente(p.tipo) === "SSDNVME");
+
+      return temArmazenamento;
+    }
+
+    function agruparItensCompra(lista, origem) {
+      const agrupados = {};
+
+      lista.forEach((p) => {
+        const chave = p.nome + "|" + origem;
+
+        if (!agrupados[chave]) {
+          agrupados[chave] = {
+            produtoNome: p.nome,
+            produtoTipo: p.tipo,
+            preco: Number(p.preco),
+            quantidade: 0,
+            origem: origem
+          };
+        }
+
+        agrupados[chave].quantidade++;
+      });
+
+      return Object.values(agrupados);
+    }
+
+  async function finalizarCompra() {
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+    if (!usuario || !usuario.id) {
+      msg("Faça login para finalizar a compra.");
+      return;
+    }
+
+    const itensAvulsos = agruparItensCompra(carrinho, "Carrinho");
+    const itensPc = agruparItensCompra(carrinhoPC, "MontePC");
+    const todosItens = [...itensAvulsos, ...itensPc];
+
+    if (!todosItens.length) {
+      msg("Seu carrinho está vazio.");
+      return;
+    }
+
+    try {
+      const res = await fetch("https://localhost:7011/api/Compras/finalizar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuarioId: usuario.id,
+          itens: todosItens
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        msg(data.mensagem || "Não foi possível finalizar a compra.");
+        return;
+      }
+
+      carrinho = [];
+      carrinhoPC = [];
+      atualizarCarrinho();
+
+      msg("Compra finalizada com sucesso.");
+
+    } catch (e) {
+      msg("Erro ao finalizar compra.");
+      console.error(e);
+    }
+  }
+
+    async function mostrarMinhasCompras() {
+      if (!usuarioLogado) {
+        msg("Faça login para ver suas compras.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://localhost:7011/api/Compras/usuario/${usuarioLogado.id}`);
+        const compras = await res.json();
+
+        const areaLogado = document.getElementById("usuarioLogadoArea");
+        const loginArea = document.getElementById("loginArea");
+        const criarContaArea = document.getElementById("criarContaArea");
+        const minhasComprasArea = document.getElementById("minhasComprasArea");
+        const lista = document.getElementById("listaMinhasCompras");
+
+        areaLogado.style.display = "none";
+        loginArea.style.display = "none";
+        criarContaArea.style.display = "none";
+        minhasComprasArea.style.display = "block";
+
+        lista.innerHTML = "";
+
+        const comprasAtivas = compras.filter(compra => compra.status !== "Cancelada");
+
+        if (!comprasAtivas.length) {
+          lista.innerHTML = "<p>Nenhuma compra encontrada.</p>";
+          return;
+        }
+
+        comprasAtivas.forEach((compra) => {
+          const idFormatado = "#" + String(compra.id).padStart(15, "0");
+
+          const itensHtml = compra.itens.map(item => `
+            <li>
+              ${item.produtoNome} x${item.quantidade} - R$ ${Number(item.preco * item.quantidade).toLocaleString("pt-BR")}
+            </li>
+          `).join("");
+
+          lista.innerHTML += `
+            <div class="bloco-compra">
+              <div class="topo-compra">
+                <button onclick="toggleItensCompra(${compra.id})">Compra ${idFormatado}</button>
+                <button class="btn-remover" onclick="cancelarCompra(${compra.id})">Cancelar compra</button>
+              </div>
+              <p>Status: ${compra.status}</p>
+              <ul id="itens-compra-${compra.id}" style="display:none;">
+                ${itensHtml}
+              </ul>
+            </div>
+          `;
+        });
+      } catch (e) {
+        msg("Erro ao carregar compras.");
+        console.error(e);
+      }
+    }
+
+    function toggleItensCompra(id) {
+      const ul = document.getElementById(`itens-compra-${id}`);
+      ul.style.display = ul.style.display === "none" ? "block" : "none";
+    }
+
+    async function cancelarCompra(id) {
+      confirmar("Tem certeza que deseja cancelar essa compra?", async () => {
+        try {
+          const res = await fetch(`https://localhost:7011/api/Compras/cancelar/${id}`, {
+            method: "PUT"
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            msg(data.mensagem || "Não foi possível cancelar a compra.");
+            return;
+          }
+
+          msg("Compra cancelada com sucesso.");
+          mostrarMinhasCompras();
+
+        } catch (e) {
+          msg("Erro ao cancelar compra.");
+          console.error(e);
+        }
+      });
+    }
+
+    async function carregarEstoque() {
+      try {
+        const res = await fetch("https://localhost:7011/api/Produtos");
+
+        if (!res.ok) {
+          console.error("Erro HTTP:", res.status);
+          return;
+        }
+
+        produtosEstoque = await res.json();
+        renderEstoque(produtosEstoque);
+
+      } catch (e) {
+        console.error("Erro fetch:", e);
+        msg("Erro ao carregar estoque.");
+      }
+    }
+
+    function filtrarEstoque() {
+      const termo = document.getElementById("buscaEstoque").value.trim();
+
+      const filtrado = produtosEstoque.filter(p => {
+
+        if (!termo) return true;
+
+        // 🔥 só aceita ID exato
+        if (!isNaN(termo)) {
+          return String(p.id) === termo;
+        }
+
+        // 🔥 nome normal
+        return (p.nome || "").toLowerCase().includes(termo.toLowerCase());
+      });
+
+      renderEstoque(filtrado);
+    }
+
+    function toggleEditarInline(id) {
+      if (produtoEditandoId === id) {
+        produtoEditandoId = null;
+      } else {
+        produtoEditandoId = id;
+      }
+
+      renderEstoque(produtosEstoque);
+    }
+
+    function renderEstoque(lista) {
+      const div = document.getElementById("listaEstoque");
+
+      if (!lista.length) {
+        div.innerHTML = "<p>Nenhum produto encontrado.</p>";
+        return;
+      }
+
+      const grupos = {};
+
+      lista.forEach(p => {
+        const tipo = p.tipo || "Outros";
+        if (!grupos[tipo]) grupos[tipo] = [];
+        grupos[tipo].push(p);
+      });
+
+      let html = "";
+
+      Object.keys(grupos).forEach(tipo => {
+        html += `
+          <h3 style="margin-top:20px; color:#00e5ff;">${tipo}</h3>
+          <table class="tabela-estoque">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Preço</th>
+                <th>Consumo</th>
+                <th>Socket</th>
+                <th>Qtd</th>
+                <th>Imagem</th>
+                <th>Potência</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        grupos[tipo].forEach(p => {
+          html += `
+            <tr onclick="toggleEditarInline(${p.id}); event.stopPropagation();">
+              <td>${p.id}</td>
+              <td>${p.nome || "-"}</td>
+              <td>R$ ${Number(p.preco || 0).toLocaleString("pt-BR")}</td>
+              <td>${p.consumoEnergia || 0}W</td>
+              <td>${p.socket || "-"}</td>
+              <td>${p.quantidade || 0}</td>
+              <td>${p.imagemUrl ? `<img src="${p.imagemUrl}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;">` : "-"}</td>
+              <td>${p.potencia || "-"}</td>
+            </tr>
+          `;
+
+          if (produtoEditandoId === p.id) {
+            html += `
+              <tr>
+                <td colspan="8">
+                  <div class="editar-inline" onclick="event.stopPropagation()">
+                    <input id="editNome" value="${p.nome || ""}" placeholder="Nome do produto" class="campo-login">
+                    <input id="editPreco" type="number" value="${p.preco || 0}" placeholder="Preço" class="campo-login">
+                    <input id="editSocket" value="${p.socket || ""}" placeholder="Socket (ex: AM4)" class="campo-login">
+                    <input id="editConsumo" type="number" value="${p.consumoEnergia || 0}" placeholder="Consumo (W)" class="campo-login">
+                    <input id="editQuantidade" type="number" value="${p.quantidade || 0}" placeholder="Quantidade" class="campo-login">
+                    <input type="file" id="editImagemFile" accept="image/png, image/jpeg" class="campo-login">
+
+                    <button onclick="event.stopPropagation(); salvarEdicaoProduto(${p.id})">Salvar</button>
+                    <button onclick="event.stopPropagation(); excluirProduto(${p.id})">Excluir</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }
+        });
+
+        html += `
+            </tbody>
+          </table>
+        `;
+      });
+
+      div.innerHTML = html;
+    }
+
+    async function salvarEdicaoProduto(id) {
+      const produtoOriginal = produtosEstoque.find(p => p.id === id);
+      if (!produtoOriginal) return;
+
+      const fileInput = document.getElementById("editImagemFile");
+      let imagemBase64 = produtoOriginal.imagemUrl || null;
+
+      if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+
+        imagemBase64 = await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      const produto = {
+        id,
+        nome: document.getElementById("editNome").value,
+        tipo: produtoOriginal.tipo,
+        preco: Number(document.getElementById("editPreco").value),
+        socket: document.getElementById("editSocket").value,
+        consumoEnergia: Number(document.getElementById("editConsumo").value),
+        quantidade: Number(document.getElementById("editQuantidade").value),
+        imagemUrl: imagemBase64,
+        potencia: produtoOriginal.potencia || null
+      };
+
+      try {
+        const res = await fetch(`https://localhost:7011/api/Produtos/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(produto)
+        });
+
+        if (!res.ok) {
+          msg("Erro ao salvar.");
+          return;
+        }
+
+        produtoEditandoId = null;
+        msg("Produto atualizado.");
+        carregarEstoque();
+      } catch {
+        msg("Erro ao salvar.");
+      }
+    }
+
+    function excluirProduto(id) {
+      confirmar("Tem certeza que deseja excluir?", async () => {
+        await fetch(`${API}/${id}`, { method: "DELETE" });
+
+        msg("Produto excluído");
+
+        await carregar();
+        await carregarEstoque();
+      });
+    }
+
+    async function criarProduto() {
+      const nome = document.getElementById("novoNome").value.trim();
+
+      const existe = produtosEstoque.some(p =>
+        (p.nome || "").toLowerCase() === nome.toLowerCase()
+      );
+
+      if (existe) {
+        msg("Já existe um produto com esse nome.");
+
+        // limpa campos
+        document.querySelectorAll("#secaoNovoProduto input").forEach(i => i.value = "");
+        return;
+      }
+
+      const fileInput = document.getElementById("novoImagemFile");
+      let imagemBase64 = null;
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+
+        imagemBase64 = await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      const produto = {
+        nome,
+        tipo: document.getElementById("novoTipo").value,
+        preco: Number(document.getElementById("novoPreco").value),
+        socket: document.getElementById("novoSocket").value,
+        consumoEnergia: Number(document.getElementById("novoConsumo").value),
+        quantidade: Number(document.getElementById("novoQuantidade").value),
+        imagemUrl: imagemBase64,
+        potencia: Number(document.getElementById("novoPotencia").value) || null
+      };
+
+      try {
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(produto)
+        });
+
+        if (!res.ok) {
+          msg("Erro ao criar produto.");
+          return;
+        }
+
+        msg("Produto criado!");
+
+        // 🔥 atualiza tudo UMA vez só
+        await carregar();
+        await carregarEstoque();
+
+        // 🔥 atualiza monte se estiver aberto
+        if (tipoAtualMonte) {
+          filtrarTipoMonte(tipoAtualMonte);
+        }
+
+        // 🔥 limpa campos
+        document.querySelectorAll("#secaoNovoProduto input").forEach(i => i.value = "");
+
+      } catch {
+        msg("Erro ao criar produto.");
+      }
+    }
+
+    const rangeMin = document.getElementById("rangeMin");
+    const rangeMax = document.getElementById("rangeMax");
+    const valorRange = document.getElementById("valorRange");
+    const valorRangeTexto = document.getElementById("valorRangeTexto");
+
+    function aplicarFiltro() {
+      let min = Number(rangeMin.value);
+      let max = Number(rangeMax.value);
+
+      if (min > max) [min, max] = [max, min];
+
+      valorRange.innerText = `R$ ${min} até R$ ${max}`;
+      valorRangeTexto.innerText = `R$ ${min} - R$ ${max}`;
+
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+
+      const filtrados = produtos.filter(p => {
+        const correspondePreco = Number(p.preco) >= min && Number(p.preco) <= max;
+        const correspondeNome = !termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca));
+        return correspondePreco && correspondeNome;
+      });
+
+      if (document.getElementById("hardware").classList.contains("pagina-ativa")) {
+        mostrarHardware(filtrados);
+      }
+
+      if (tipoAtualMonte) {
+        mostrarMonte(
+          filtrados.filter(p => tipoEquivalente(p.tipo) === tipoAtualMonte)
+        );
+      } else {
+        mostrarMonte(filtrados);
+      }
+    }
+
+    rangeMin.addEventListener("input", aplicarFiltro);
+    rangeMax.addEventListener("input", aplicarFiltro);
+
+    document.addEventListener("click", function (e) {
+      const dentro = e.target.closest(".editar-inline");
+
+      if (!dentro && produtoEditandoId !== null) {
+        produtoEditandoId = null;
+        renderEstoque(produtosEstoque);
+      }
+    });
+    let acaoConfirmar = null;
+
+    function confirmar(msgTexto, callback) {
+      document.getElementById("confirmTexto").innerText = msgTexto;
+      document.getElementById("confirmBox").style.display = "block";
+      acaoConfirmar = callback;
+    }
+
+    function confirmarAcao(resp) {
+      document.getElementById("confirmBox").style.display = "none";
+
+      if (resp && acaoConfirmar) {
+        acaoConfirmar();
+      }
+
+      acaoConfirmar = null; // 🔥 ADICIONA ISSO
+    }
+        // 🔥 EXECUTA AO CARREGAR
+    // 🔥 EXECUTA AO CARREGAR (VERSÃO CORRETA)
+    const usuarioSalvo = JSON.parse(localStorage.getItem("usuario"));
+
+    if (usuarioSalvo) {
+      usuarioLogado = usuarioSalvo;
+    }
+
+    atualizarAreaUsuario();
+    atualizarVisibilidadeCarrinho();
+    carregar();
+  </script>
+  <div id="confirmBox" class="confirm-box" style="display:none;">
+  <p id="confirmTexto"></p>
+  <button onclick="confirmarAcao(true)">Sim</button>
+  <button onclick="confirmarAcao(false)">Não</button>
+</div>
+</body>
+</html>
