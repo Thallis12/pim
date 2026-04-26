@@ -1,0 +1,219 @@
+# 🚀 Projeto PIM - TechBuild
+
+Sistema completo de vendas de hardware com funcionalidade de **Monte seu PC**, controle de estoque e gerenciamento de compras.
+
+---
+
+## 📌 Visão Geral
+
+O sistema permite:
+
+* 🛒 Comprar produtos normalmente (Carrinho)
+* 🖥️ Montar um PC personalizado (Monte seu PC)
+* 📦 Controle automático de estoque
+* 📊 Visualizar histórico de vendas
+* ❌ Cancelar compras
+* 👤 Gerenciar usuários
+
+---
+
+## 🏗️ Tecnologias Utilizadas
+
+### 🔧 Backend
+
+* C#
+* ASP.NET Core
+* Entity Framework
+* SQL Server
+
+### 🌐 Frontend
+
+* HTML
+* CSS
+* JavaScript
+
+---
+
+## 💾 Banco de Dados
+
+O projeto já inclui o arquivo:
+
+```
+banco.sql
+```
+
+---
+
+## ▶️ COMO IMPORTAR O BANCO (PASSO A PASSO)
+
+1. Abra o **SQL Server Management Studio (SSMS)**
+2. Clique com o botão direito em **Databases**
+3. Clique em:
+
+```
+New Database
+```
+
+4. Dê um nome (ex: `TechHouseDB`)
+
+---
+
+### 🔥 IMPORTAR O ARQUIVO
+
+5. Clique no banco criado
+6. Clique em **New Query**
+7. Clique em **Open File**
+8. Selecione:
+
+```
+banco.sql
+```
+
+9. Clique em:
+
+```
+Execute
+```
+
+✅ Pronto, banco importado com estrutura + dados
+
+---
+
+## ⚙️ CONFIGURAR BACKEND
+
+Abra o projeto no **Visual Studio**
+
+---
+
+### 🔗 STRING DE CONEXÃO
+
+Vá no arquivo:
+
+```
+appsettings.json
+```
+
+E configure:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=SEU_SERVIDOR;Database=TechHouseDB;Trusted_Connection=True;"
+}
+```
+
+Exemplo comum:
+
+```json
+"Server=localhost\\SQLEXPRESS;Database=TechHouseDB;Trusted_Connection=True;"
+```
+
+---
+
+## ▶️ RODAR BACKEND
+
+1. Abra a pasta:
+
+```
+TechHouse Industry
+```
+
+2. Clique em:
+
+```
+Run (F5)
+```
+
+3. A API vai iniciar, exemplo:
+
+```
+https://localhost:7011
+```
+
+---
+
+## 🌐 RODAR FRONTEND
+
+1. Vá na pasta:
+
+```
+html
+```
+
+2. Abra o arquivo:
+
+```
+index.html
+```
+
+👉 Recomendado usar:
+
+* VS Code + Live Server
+
+---
+
+## 🔗 IMPORTANTE
+
+⚠️ O BACKEND PRECISA ESTAR RODANDO antes do frontend
+
+---
+
+## 🧪 COMO TESTAR O SISTEMA
+
+### ✔️ Teste completo
+
+1. Abra o sistema no navegador
+2. Faça login (ou use admin)
+3. Vá em:
+
+* 🛒 Carrinho → fazer compra
+* 🖥️ Monte seu PC → montar configuração
+* 📊 Vendas → visualizar histórico
+
+---
+
+### 🔍 TESTAR API (OPCIONAL)
+
+Abra no navegador ou Postman:
+
+```
+GET https://localhost:7011/api/Vendas
+```
+
+---
+
+## ❗ POSSÍVEIS PROBLEMAS
+
+### ❌ Não conecta no banco
+
+✔ Verifique a string de conexão
+
+---
+
+### ❌ Front não carrega dados
+
+✔ Backend não está rodando
+
+---
+
+### ❌ Erro de CORS
+
+✔ Rodar backend antes do front
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+PIM/
+├── TechHouse Industry/   → Backend (API)
+├── html/                 → Frontend
+├── banco.sql             → Banco de dados
+└── README.md             → Documentação
+```
+
+---
+
+## 📌 Status
+
+✅ Projeto funcional
+🚀 Em evolução
