@@ -210,7 +210,8 @@
             <th>Qtd total</th>
             <th>Total</th>
             <th>Status</th>
-            <th>Data</th>   
+            <th>Data</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody id="tabelaVendas"></tbody>
@@ -292,6 +293,10 @@
           <h3>Renda por ano</h3>
           <canvas id="graficoAno"></canvas>
         </div>
+        <div class="grafico-box">
+          <h3>Vendas / Devoluções / Cancelamentos</h3>
+          <canvas id="graficoStatus"></canvas>
+        </div>
       </div>
     </div>
   </main>
@@ -315,19 +320,77 @@
     let chartDia      = null;
     let chartMes      = null;
     let chartAno      = null;
+    let chartStatus   = null;
 
     // ─── Utilitários de status ───────────────────────────────────────────────────
     function corStatus(status) {
-      if (status === "Concluida") return "#00ff88";
-      if (status === "Cancelada") return "#ff4d4d";
-      if (status === "Parcial")   return "#ffaa00";
+      if (status === "Em Preparo")    return "#ffcc00";
+      if (status === "Em Transporte") return "#00aaff";
+      if (status === "Entregue")      return "#00ff88";
+      if (status === "Cancelada")     return "#ff4d4d";
+      if (status === "Devolvida")     return "#ff9900";
+      if (status === "Perda")         return "#cc0000";
+      if (status === "Concluida")     return "#00ff88"; // legado
+      if (status === "Parcial")       return "#ffaa00";
       return "#ccc";
+    }
+
+    // Próximo status possível na sequência do admin
+    function proximoStatus(status) {
+      if (status === "Em Preparo")    return "Em Transporte";
+      if (status === "Em Transporte") return "Entregue";
+      return null;
     }
 
     function toggleVenda(compraId) {
       const el = document.getElementById(`detalhe-${compraId}`);
       if (!el) return;
       el.style.display = el.style.display === "none" ? "table-row" : "none";
+    }
+
+    // Avança status de UMA venda (admin)
+    async function avancarStatusVenda(vendaId, compraId) {
+      try {
+        const res  = await fetch(`https://localhost:7011/api/Vendas/avancar-status/${vendaId}`, { method: "PUT" });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Erro ao avançar status."); return; }
+        msg("Status atualizado: " + data.status);
+        await carregarVendas();
+      } catch (e) { msg("Erro ao avançar status."); console.error(e); }
+    }
+
+    // Modal de devolução (cliente)
+    let _devolverVendaId = null;
+    function abrirModalDevolucao(vendaId) {
+      _devolverVendaId = vendaId;
+      document.getElementById("modalDevolucao").style.display = "flex";
+      document.getElementById("motivoOutroTexto").style.display = "none";
+      document.getElementById("motivoOutroTexto").value = "";
+      // reset radio
+      document.querySelectorAll('input[name="motivoDev"]').forEach(r => r.checked = false);
+    }
+    function fecharModalDevolucao() {
+      document.getElementById("modalDevolucao").style.display = "none";
+      _devolverVendaId = null;
+    }
+    async function confirmarDevolucao() {
+      const radio = document.querySelector('input[name="motivoDev"]:checked');
+      if (!radio) { msg("Selecione um motivo de devolução."); return; }
+      const motivo = radio.value;
+      const motivoTexto = motivo === "Outro" ? document.getElementById("motivoOutroTexto").value.trim() : "";
+      if (motivo === "Outro" && !motivoTexto) { msg("Descreva o motivo."); return; }
+      try {
+        const res  = await fetch(`https://localhost:7011/api/Vendas/devolver/${_devolverVendaId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ motivo, motivoTexto })
+        });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Erro ao registrar devolução."); return; }
+        msg("Devolução registrada: " + data.status);
+        fecharModalDevolucao();
+        mostrarMinhasCompras();
+      } catch (e) { msg("Erro ao devolver."); console.error(e); }
     }
 
     function isAdminLogin() {
@@ -450,56 +513,85 @@
 
       vendas.forEach(v => {
         if (!agrupado[v.compraId]) {
-          agrupado[v.compraId] = { compraId: v.compraId, data: v.data, usuario: v.usuarioNome, itens: [], status: null };
+          agrupado[v.compraId] = { compraId: v.compraId, data: v.data, usuario: v.usuarioNome, itens: [] };
         }
         agrupado[v.compraId].itens.push(v);
       });
 
-      Object.values(agrupado).forEach(c => {
-        const itens            = c.itens;
-        const todosCancelados  = itens.every(i => (i.status || "") === "Cancelada");
-        const todosConcluidos  = itens.every(i => (i.status || "") === "Concluida");
-        if      (todosCancelados)  c.status = "Cancelada";
-        else if (todosConcluidos)  c.status = "Concluida";
-        else                       c.status = "Parcial";
-      });
-
       Object.values(agrupado).forEach((c, index) => {
-        const total          = c.itens.reduce((s, i) => s + (i.preco * i.quantidade), 0);
-        const quantidadeTotal = c.itens.reduce((s, i) => s + i.quantidade, 0);
-        const itensVenda     = c.itens.filter(i => i.origem === "Carrinho");
-        const itensPC        = c.itens.filter(i => i.origem === "MontePC");
+        const itens             = c.itens;
+        const total             = itens.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+        const quantidadeTotal   = itens.reduce((s, i) => s + i.quantidade, 0);
+        const itensVenda        = itens.filter(i => i.origem === "Carrinho");
+        const itensPC           = itens.filter(i => i.origem === "MontePC");
+
+        // Status geral do grupo
+        const statusList = itens.map(i => i.status || "");
+        const statusFinais = ["Devolvida", "Perda", "Cancelada", "Entregue"];
+        let statusGrupo;
+        if (statusList.every(s => s === "Cancelada"))          statusGrupo = "Cancelada";
+        else if (statusList.every(s => s === "Devolvida"))     statusGrupo = "Devolvida";
+        else if (statusList.every(s => s === "Perda"))         statusGrupo = "Perda";
+        else if (statusList.every(s => s === "Entregue"))      statusGrupo = "Entregue";
+        else if (statusList.every(s => s === "Em Preparo"))    statusGrupo = "Em Preparo";
+        else if (statusList.every(s => s === "Em Transporte")) statusGrupo = "Em Transporte";
+        else if (statusList.every(s => statusFinais.includes(s))) {
+          if (statusList.some(s => s === "Perda"))         statusGrupo = "Perda";
+          else if (statusList.some(s => s === "Devolvida")) statusGrupo = "Devolvida";
+          else                                               statusGrupo = "Parcial";
+        }
+        else statusGrupo = "Parcial";
+
+        // Botão avançar status (admin) — avança todos os itens que ainda podem avançar
+        const podeAvancar = itens.some(i => proximoStatus(i.status));
+        const btnAvancar = podeAvancar
+          ? `<button onclick="event.stopPropagation(); avancarStatusGrupo(${c.compraId})" style="font-size:12px;padding:4px 8px;">▶ Avançar status</button>`
+          : "";
+
+        // Botão cancelar (admin)
+        const podeCancelarAdmin = itens.some(i => i.status === "Em Preparo");
+        const btnCancelar = podeCancelarAdmin
+          ? `<button class="btn-remover" onclick="event.stopPropagation(); cancelarCompra(${c.compraId})" style="font-size:12px;padding:4px 8px;">✕ Cancelar</button>`
+          : "";
 
         tabela.innerHTML += `
           <tr onclick="toggleVenda(${c.compraId})" class="linha-venda ${index % 2 === 0 ? 'par' : 'impar'}">
             <td>#${String(c.compraId).padStart(6, '0')}</td>
-            <td>${c.itens.length} item(s)</td>
+            <td>${itens.length} item(s)</td>
             <td>${quantidadeTotal}</td>
             <td>R$ ${total.toLocaleString("pt-BR")}</td>
-            <td style="color:${corStatus(c.status)}">${c.status}</td>
+            <td style="color:${corStatus(statusGrupo)}">${statusGrupo}</td>
             <td>${c.data ? new Date(c.data).toLocaleString("pt-BR") : "-"}</td>
+            <td style="white-space:nowrap; display:flex; gap:4px; flex-wrap:wrap;">${btnAvancar}${btnCancelar}</td>
           </tr>
           <tr id="detalhe-${c.compraId}" style="display:none;">
-            <td colspan="6">
+            <td colspan="7">
               <div class="detalhe-venda">
                 <p><b>Usuário:</b> ${c.usuario || "Desconhecido"}</p>
                 ${itensVenda.length > 0 ? `
                   <p style="margin-top:10px;"><b>🛒 Venda:</b></p>
-                  ${itensVenda.map(i => `<p>• ${i.produtoNome} x${i.quantidade} - R$ ${i.preco.toLocaleString("pt-BR")}</p>`).join("")}
+                  ${itensVenda.map(i => `<p>• ${i.produtoNome} x${i.quantidade} — R$ ${i.preco.toLocaleString("pt-BR")} <span style="color:${corStatus(i.status)}">[${i.status}]</span>${i.motivoDevolicao ? ` — Motivo: ${i.motivoDevolicao}` : ""}</p>`).join("")}
                 ` : ""}
                 ${itensPC.length > 0 ? `
                   <p style="margin-top:10px;"><b>🖥️ Monte seu PC:</b></p>
-                  ${itensPC.map(i => `<p>• ${i.produtoNome} x${i.quantidade} - R$ ${i.preco.toLocaleString("pt-BR")}</p>`).join("")}
+                  ${itensPC.map(i => `<p>• ${i.produtoNome} x${i.quantidade} — R$ ${i.preco.toLocaleString("pt-BR")} <span style="color:${corStatus(i.status)}">[${i.status}]</span>${i.motivoDevolicao ? ` — Motivo: ${i.motivoDevolicao}` : ""}</p>`).join("")}
                 ` : ""}
                 <p style="margin-top:10px;"><b>Total:</b> R$ ${total.toLocaleString("pt-BR")}</p>
-                ${c.status !== "Cancelada"
-                  ? `<button onclick="event.stopPropagation(); cancelarCompra(${c.compraId})">Cancelar compra</button>`
-                  : `<span style="color:red">Cancelada</span>`}
               </div>
             </td>
           </tr>
         `;
       });
+    }
+
+    // Avança status de todos os itens de um compraId que ainda podem avançar
+    async function avancarStatusGrupo(compraId) {
+      const itens = vendasCache.filter(v => v.compraId === compraId && proximoStatus(v.status));
+      for (const item of itens) {
+        await fetch(`https://localhost:7011/api/Vendas/avancar-status/${item.id}`, { method: "PUT" });
+      }
+      msg("Status avançado com sucesso.");
+      await carregarVendas();
     }
 
     // ─── Painel ──────────────────────────────────────────────────────────────────
@@ -734,13 +826,16 @@
       const div = document.getElementById("produtos");
       div.innerHTML = "";
       lista.forEach(p => {
+        const semEstoque = (p.quantidade !== undefined && p.quantidade !== null && p.quantidade <= 0);
         div.innerHTML += `
           <div class="card">
             <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
             <h3>${p.nome}</h3>
             <p>${nomeTipoExibicao(p.tipo)}</p>
             <p class="preco">R$ ${formatarPreco(p.preco)}</p>
-            <button onclick='addCarrinho(${JSON.stringify(p)})'>Comprar</button>
+            ${semEstoque
+              ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
+              : `<button onclick='addCarrinho(${JSON.stringify(p)})'>Comprar</button>`}
           </div>
         `;
       });
@@ -830,21 +925,24 @@
       const div = document.getElementById("produtosMonte");
       div.innerHTML = "";
       lista.forEach(p => {
-        const qtd      = quantidadeProdutoNoMonte(p.nome);
-        const nomeTipo = nomeTipoExibicao(p.tipo);
-        const tipoBase = tipoEquivalente(p.tipo);
-        const tipoQtd  = ["RAM", "SSD", "HD", "SSDNVME"];
+        const qtd        = quantidadeProdutoNoMonte(p.nome);
+        const nomeTipo   = nomeTipoExibicao(p.tipo);
+        const tipoBase   = tipoEquivalente(p.tipo);
+        const tipoQtd    = ["RAM", "SSD", "HD", "SSDNVME"];
+        const semEstoque = (p.quantidade !== undefined && p.quantidade !== null && p.quantidade <= 0);
         if (tipoQtd.includes(tipoBase)) {
           div.innerHTML += `
             <div class="card">
               <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
               <h3>${p.nome}</h3><p>${nomeTipo}</p>
               <p class="preco">R$ ${formatarPreco(p.preco)}</p>
-              <div class="controle-qtd">
-                <button onclick='removerUnidadeMonte(${JSON.stringify(p)})'>-</button>
-                <span class="qtd-badge">${qtd}</span>
-                <button onclick='adicionarUnidadeMonte(${JSON.stringify(p)})'>+</button>
-              </div>
+              ${semEstoque && qtd === 0
+                ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
+                : `<div class="controle-qtd">
+                    <button onclick='removerUnidadeMonte(${JSON.stringify(p)})'>-</button>
+                    <span class="qtd-badge">${qtd}</span>
+                    <button onclick='adicionarUnidadeMonte(${JSON.stringify(p)})' ${semEstoque ? 'disabled style="opacity:0.4;"' : ''}>+</button>
+                  </div>`}
             </div>`;
         } else {
           const jaSelecionado = qtd > 0;
@@ -855,7 +953,9 @@
               <p class="preco">R$ ${formatarPreco(p.preco)}</p>
               ${jaSelecionado
                 ? `<button class="btn-remover" onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Remover</button>`
-                : `<button onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Adicionar</button>`}
+                : semEstoque
+                  ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
+                  : `<button onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Adicionar</button>`}
             </div>`;
         }
       });
@@ -1025,21 +1125,63 @@
         document.getElementById("minhasComprasArea").style.display  = "block";
         const lista = document.getElementById("listaMinhasCompras");
         lista.innerHTML = "";
-        const comprasAtivas = compras.filter(c => c.status !== "Cancelada");
-        if (!comprasAtivas.length) { lista.innerHTML = "<p>Nenhuma compra encontrada.</p>"; return; }
-        comprasAtivas.forEach(compra => {
+
+        // Busca também as vendas do usuário para ter status individual
+        const resV = await fetch(`https://localhost:7011/api/Vendas`);
+        const todasVendas = await resV.json();
+        const vendasUsuario = todasVendas.filter(v => v.usuarioNome === (usuarioLogado.nome || "Usuário") || true);
+        // Filtra por usuário via compraId
+        const comprasNaoNulas = compras.filter(c => c.status !== "Cancelada");
+
+        if (!comprasNaoNulas.length) { lista.innerHTML = "<p>Nenhuma compra encontrada.</p>"; return; }
+
+        comprasNaoNulas.forEach(compra => {
           const idFormatado = "#" + String(compra.id).padStart(15, "0");
-          const itensHtml   = compra.itens.map(item =>
-            `<li>${item.produtoNome} x${item.quantidade} - R$ ${Number(item.preco * item.quantidade).toLocaleString("pt-BR")}</li>`
-          ).join("");
+          const vendasDaCompra = todasVendas.filter(v => v.compraId === compra.id);
+
+          // Determina status geral da compra com base nas vendas
+          const statusVendas = vendasDaCompra.map(v => v.status);
+          const statusFinaisCompra = ["Devolvida", "Perda", "Cancelada", "Entregue"];
+          let statusExibir = compra.status;
+          if (statusVendas.length > 0) {
+            if (statusVendas.every(s => s === "Em Preparo"))       statusExibir = "Em Preparo";
+            else if (statusVendas.every(s => s === "Em Transporte")) statusExibir = "Em Transporte";
+            else if (statusVendas.every(s => s === "Entregue"))    statusExibir = "Entregue";
+            else if (statusVendas.every(s => s === "Cancelada"))   statusExibir = "Cancelada";
+            else if (statusVendas.every(s => s === "Devolvida"))   statusExibir = "Devolvida";
+            else if (statusVendas.every(s => s === "Perda"))       statusExibir = "Perda";
+            else if (statusVendas.every(s => statusFinaisCompra.includes(s))) {
+              if (statusVendas.some(s => s === "Perda"))         statusExibir = "Perda";
+              else if (statusVendas.some(s => s === "Devolvida")) statusExibir = "Devolvida";
+              else                                                  statusExibir = "Parcial";
+            }
+            else statusExibir = "Parcial";
+          }
+
+          const podeCancelar = statusExibir === "Em Preparo";
+          const podeDevolver = statusExibir === "Entregue";
+
+          // Renderiza itens com botão devolver individual
+          const itensHtml = compra.itens.map(item => {
+            const venda = vendasDaCompra.find(v => v.produtoNome === item.produtoNome);
+            const statusItem = venda ? venda.status : statusExibir;
+            const podeDevItem = statusItem === "Entregue";
+            const devBtn = podeDevItem
+              ? `<button onclick="abrirModalDevolucao(${venda.id})" style="font-size:11px;padding:3px 8px;margin-left:8px;">↩ Devolver</button>`
+              : statusItem === "Devolvida" || statusItem === "Perda"
+                ? `<span style="color:${corStatus(statusItem)};font-size:11px;margin-left:8px;">[${statusItem}]</span>`
+                : "";
+            return `<li style="margin-bottom:6px;">${item.produtoNome} x${item.quantidade} — R$ ${Number(item.preco * item.quantidade).toLocaleString("pt-BR")} <span style="color:${corStatus(statusItem)}">[${statusItem}]</span>${devBtn}</li>`;
+          }).join("");
+
           lista.innerHTML += `
-            <div class="bloco-compra">
-              <div class="topo-compra">
-                <button onclick="toggleItensCompra(${compra.id})">Compra ${idFormatado}</button>
-                <button class="btn-remover" onclick="cancelarCompra(${compra.id})">Cancelar compra</button>
+            <div class="bloco-compra" style="background:#03101f;border:1px solid #00e5ff33;border-radius:12px;padding:14px;margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                <button onclick="toggleItensCompra(${compra.id})">${idFormatado}</button>
+                <span style="color:${corStatus(statusExibir)};font-weight:bold;">${statusExibir}</span>
+                ${podeCancelar ? `<button class="btn-remover" onclick="cancelarCompra(${compra.id})">✕ Cancelar compra</button>` : ""}
               </div>
-              <p>Status: ${compra.status}</p>
-              <ul id="itens-compra-${compra.id}" style="display:none;">${itensHtml}</ul>
+              <ul id="itens-compra-${compra.id}" style="display:none;margin-top:10px;">${itensHtml}</ul>
             </div>`;
         });
       } catch (e) { msg("Erro ao carregar compras."); console.error(e); }
@@ -1058,19 +1200,16 @@
           if (!res.ok) { msg(data.mensagem || "Não foi possível cancelar a compra."); return; }
           msg("Compra cancelada com sucesso.");
 
-          // Atualiza vendasCache localmente sem precisar sair da aba
           vendasCache = vendasCache.map(v => {
             if (v.compraId === id) return { ...v, status: "Cancelada" };
             return v;
           });
 
-          // Se está na aba de vendas do painel, re-renderiza na hora
           const secaoVendas = document.getElementById("secaoVendas");
           if (secaoVendas && secaoVendas.style.display !== "none") {
             renderizarVendas(vendasCache);
           }
 
-          // Se está em "Minhas compras" (sidebar do usuário), atualiza também
           const minhasComprasArea = document.getElementById("minhasComprasArea");
           if (minhasComprasArea && minhasComprasArea.style.display !== "none") {
             mostrarMinhasCompras();
@@ -1279,32 +1418,36 @@
         const res   = await fetch("https://localhost:7011/api/Vendas");
         const vendas = await res.json();
 
-        // ✅ FIX 1 — declarar produtosMap aqui dentro
         const produtosMap = {};
-
         const rendaDia  = {};
         const rendaMes  = {};
-        const rendaAno  = {};   // ✅ FIX 2 — objeto vazio, não { Lucro:0, Perda:0 }
-
+        const rendaAno  = {};
         const perdasDia  = {};
         const perdasMes  = {};
         const perdasAno  = {};
 
+        // Para gráfico de status: contagem de vendas, devoluções e cancelamentos/perdas
+        let qtdVendas = 0, qtdDevolucoes = 0, qtdCancelamentos = 0, qtdPerdas = 0;
+
         let total = 0;
 
         vendas.forEach(v => {
-          const cancelada = v.status === "Cancelada"; // ✅ FIX 3 — variável local correta
-          const subtotal  = cancelada
-            ? -(v.preco * v.quantidade)
-            :   v.preco * v.quantidade;
+          const status = v.status || "Concluida";
+          const cancelada  = status === "Cancelada";
+          const devolvida  = status === "Devolvida";
+          const perda      = status === "Perda";
+          const ativa      = !cancelada && !devolvida && !perda;
 
-          total += subtotal;
+          const subtotal = v.preco * v.quantidade;
 
-          // Produtos mais vendidos
+          if (ativa)     { total += subtotal; qtdVendas++; }
+          if (devolvida) { total -= subtotal; qtdDevolucoes++; }
+          if (perda)     { total -= subtotal; qtdPerdas++; }
+          if (cancelada) qtdCancelamentos++;
+
           if (!produtosMap[v.produtoNome]) produtosMap[v.produtoNome] = 0;
-          produtosMap[v.produtoNome] += v.quantidade;
+          if (ativa) produtosMap[v.produtoNome] += v.quantidade;
 
-          // Agrupamento por data
           const data = new Date(v.data);
           const dia  = data.toLocaleDateString("pt-BR");
           const mes  = `${data.getMonth() + 1}/${data.getFullYear()}`;
@@ -1317,11 +1460,10 @@
           if (!perdasMes[mes]) perdasMes[mes] = 0;
           if (!perdasAno[ano]) perdasAno[ano] = 0;
 
-          // ✅ FIX 4 — usa a variável `cancelada` declarada acima
-          if (cancelada) {
-            perdasDia[dia] += Math.abs(subtotal);
-            perdasMes[mes] += Math.abs(subtotal);
-            perdasAno[ano] += Math.abs(subtotal);
+          if (cancelada || devolvida || perda) {
+            perdasDia[dia] += subtotal;
+            perdasMes[mes] += subtotal;
+            perdasAno[ano] += subtotal;
           } else {
             rendaDia[dia]  += subtotal;
             rendaMes[mes]  += subtotal;
@@ -1332,7 +1474,6 @@
         document.getElementById("totalVendido").innerText = "R$ " + total.toLocaleString("pt-BR");
         document.getElementById("totalPedidos").innerText = vendas.length;
 
-        // Ordena dias: mais antigo à esquerda, mais recente à direita
         const diasOrdenados = Object.keys(rendaDia).sort((a, b) => {
           const [da, ma, ya] = a.split("/").map(Number);
           const [db, mb, yb] = b.split("/").map(Number);
@@ -1341,7 +1482,6 @@
         const rendaDiaOrd  = Object.fromEntries(diasOrdenados.map(k => [k, rendaDia[k]  || 0]));
         const perdasDiaOrd = Object.fromEntries(diasOrdenados.map(k => [k, perdasDia[k] || 0]));
 
-        // Ordena meses: mais antigo à esquerda, mais recente à direita
         const mesesOrdenados = Object.keys(rendaMes).sort((a, b) => {
           const [ma, ya] = a.split("/").map(Number);
           const [mb, yb] = b.split("/").map(Number);
@@ -1350,7 +1490,6 @@
         const rendaMesOrd  = Object.fromEntries(mesesOrdenados.map(k => [k, rendaMes[k]  || 0]));
         const perdasMesOrd = Object.fromEntries(mesesOrdenados.map(k => [k, perdasMes[k] || 0]));
 
-        // Ordena anos: mais antigo à esquerda, mais recente à direita
         const anosOrdenados = Object.keys(rendaAno).sort((a, b) => Number(a) - Number(b));
         const rendaAnoOrd  = Object.fromEntries(anosOrdenados.map(k => [k, rendaAno[k]  || 0]));
         const perdasAnoOrd = Object.fromEntries(anosOrdenados.map(k => [k, perdasAno[k] || 0]));
@@ -1359,6 +1498,7 @@
         criarGraficoDia(rendaDiaOrd, perdasDiaOrd);
         criarGraficoMes(rendaMesOrd, perdasMesOrd);
         criarGraficoAno(rendaAnoOrd, perdasAnoOrd);
+        criarGraficoStatus(qtdVendas, qtdDevolucoes, qtdCancelamentos, qtdPerdas);
 
       } catch (e) {
         console.error(e);
@@ -1414,10 +1554,36 @@
       const canvas  = document.getElementById("graficoProdutos");
       const entradas = Object.entries(dados).sort((a, b) => b[1] - a[1]);
       const opts    = baseOpts(tooltipQtd);
-      // eixo X = quantidade (sem R$), eixo Y = nomes dos produtos
       opts.scales.x.ticks.callback = v => v;
-      opts.scales.y.ticks.callback = v => v;
+      opts.scales.y.ticks.display  = false;
       opts.scales.y.beginAtZero    = undefined;
+      opts.layout = { padding: { left: 160, right: 52 } };
+
+      const labelPlugin = {
+        id: "produtoLabels",
+        afterDraw(chart) {
+          const { ctx, scales: { x, y }, data } = chart;
+          const dataset = data.datasets[0];
+          ctx.save();
+          data.labels.forEach((nome, i) => {
+            const meta  = chart.getDatasetMeta(0).data[i];
+            const yPos  = meta.y;
+            const valor = dataset.data[i];
+            const xFim  = x.getPixelForValue(valor);
+            ctx.textAlign    = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle    = "#cbd5e1";
+            ctx.font         = "12px Arial";
+            const nomeExibir = nome.length > 22 ? nome.substring(0, 21) + "…" : nome;
+            ctx.fillText(nomeExibir, x.left - 8, yPos);
+            ctx.textAlign    = "left";
+            ctx.fillStyle    = "#7df9ff";
+            ctx.font         = "bold 12px Arial";
+            ctx.fillText(valor + " un.", xFim + 6, yPos);
+          });
+          ctx.restore();
+        }
+      };
 
       chartProdutos = new Chart(canvas, {
         type: "bar",
@@ -1433,7 +1599,8 @@
             borderSkipped: false
           }]
         },
-        options: { ...opts, indexAxis: "y" }
+        options: { ...opts, indexAxis: "y" },
+        plugins: [labelPlugin]
       });
     }
 
@@ -1568,7 +1735,66 @@
         options: baseOpts(tooltipReais)
       });
     }
+    // ── 5. Vendas / Devoluções / Cancelamentos — rosca ──────────────────────────
+    function criarGraficoStatus(vendas, devolucoes, cancelamentos, perdas) {
+      destruirGrafico(chartStatus);
+      chartStatus = new Chart(document.getElementById("graficoStatus"), {
+        type: "doughnut",
+        data: {
+          labels: ["Vendas ativas", "Devoluções", "Cancelamentos", "Perdas (defeito)"],
+          datasets: [{
+            data: [vendas, devolucoes, cancelamentos, perdas],
+            backgroundColor: [
+              "rgba(0,255,136,0.8)",
+              "rgba(255,153,0,0.8)",
+              "rgba(60,0,80,0.95)",
+              "rgba(180,0,0,0.85)"
+            ],
+            borderColor: ["#00ff88","#ff9900","#3c0050","#cc0000"],
+            borderWidth: 2,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 800 },
+          plugins: {
+            legend: { labels: { color: "#fff", font: { size: 12 }, padding: 14 }, position: "bottom" },
+            tooltip: {
+              backgroundColor: "rgba(2,6,23,0.92)",
+              borderColor: "rgba(0,191,255,0.3)",
+              borderWidth: 1,
+              titleColor: "#00bfff",
+              bodyColor: "#e2e8f0",
+              callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` }
+            }
+          }
+        }
+      });
+    }
   </script>
+
+  <!-- Modal devolução -->
+  <div id="modalDevolucao" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99998;align-items:center;justify-content:center;">
+    <div style="background:#03101f;border:1px solid #00e5ff;border-radius:14px;padding:24px;width:90%;max-width:400px;">
+      <h3 style="color:#00e5ff;margin-top:0;">Motivo da devolução</h3>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="radio" name="motivoDev" value="Desistencia"> Desistência
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="radio" name="motivoDev" value="Defeito"> Defeito
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="radio" name="motivoDev" value="Outro" onchange="document.getElementById('motivoOutroTexto').style.display='block'"> Outro
+      </label>
+      <input type="text" id="motivoOutroTexto" placeholder="Descreva o motivo..." class="campo-login" style="display:none;margin-bottom:10px;">
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button onclick="confirmarDevolucao()" style="flex:1;">Confirmar devolução</button>
+        <button class="btn-remover" onclick="fecharModalDevolucao()" style="flex:1;">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <div id="confirmBox" class="confirm-box" style="display:none;">
     <p id="confirmTexto"></p>

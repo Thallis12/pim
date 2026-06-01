@@ -16,7 +16,14 @@ namespace TechBuildAPI.Controllers
             _context = context;
         }
 
-        // 🔥 GET - LISTAR VENDAS
+        // DTO para devolução
+        public class DevolverDto
+        {
+            public string Motivo { get; set; } = ""; // "Defeito" | "Desistencia" | "Outro"
+            public string? MotivoTexto { get; set; }  // preenchido quando Motivo == "Outro"
+        }
+
+        // GET - LISTAR VENDAS
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -30,28 +37,22 @@ namespace TechBuildAPI.Controllers
                     v.Preco,
                     v.Quantidade,
                     v.Status,
-
-                    // 🔥 DATA CORRETA
                     Data = v.Compra != null ? v.Compra.DataCompra : v.Data,
-
                     v.ProdutoNome,
                     v.ProdutoTipo,
-
-                    // 🔥 ESSENCIAL PRA SEPARAR NO FRONT
                     v.Origem,
-
                     UsuarioNome = (v.Usuario != null && !string.IsNullOrEmpty(v.Usuario.Nome))
                         ? v.Usuario.Nome
                         : "Usuário",
-
-                    v.CompraId
+                    v.CompraId,
+                    v.MotivoDevolicao
                 })
                 .ToListAsync();
 
             return Ok(vendas);
         }
 
-        // 🔥 POST - CRIAR VENDA
+        // POST - CRIAR VENDA
         [HttpPost]
         public async Task<IActionResult> Criar([FromBody] Vendas venda)
         {
@@ -65,12 +66,9 @@ namespace TechBuildAPI.Controllers
                 return BadRequest("Produto inválido.");
 
             var brasil = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-
             venda.Data = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brasil);
-            venda.Status = string.IsNullOrEmpty(venda.Status) ? "Concluida" : venda.Status;
+            venda.Status = "Em Preparo";
 
-            // 🔥 GARANTE QUE NÃO VAI NULL
-            // 🔥 GARANTE QUE NÃO VAI NULL
             if (string.IsNullOrEmpty(venda.Origem))
                 venda.Origem = "Carrinho";
 
@@ -80,19 +78,83 @@ namespace TechBuildAPI.Controllers
             return Ok(venda);
         }
 
-        // 🔥 PUT - CANCELAR VENDA
+        // PUT - AVANÇAR STATUS (apenas admin)
+        // Sequência: Em Preparo → Em Transporte → Entregue
+        [HttpPut("avancar-status/{id}")]
+        public async Task<IActionResult> AvancarStatus(int id)
+        {
+            var venda = await _context.Vendas.FindAsync(id);
+            if (venda == null)
+                return NotFound("Venda não encontrada.");
+
+            venda.Status = venda.Status switch
+            {
+                "Em Preparo" => "Em Transporte",
+                "Em Transporte" => "Entregue",
+                _ => venda.Status
+            };
+
+            await _context.SaveChangesAsync();
+            return Ok(new { mensagem = "Status atualizado.", status = venda.Status });
+        }
+
+        // PUT - CANCELAR VENDA (cliente — só até "Em Preparo")
         [HttpPut("cancelar/{id}")]
         public async Task<IActionResult> Cancelar(int id)
         {
             var venda = await _context.Vendas.FindAsync(id);
-
             if (venda == null)
                 return NotFound("Venda não encontrada.");
 
-            venda.Status = "Cancelada";
-            await _context.SaveChangesAsync();
+            if (venda.Status != "Em Preparo")
+                return BadRequest(new { mensagem = "Não é possível cancelar: pedido já foi enviado." });
 
+            venda.Status = "Cancelada";
+
+            // Devolve ao estoque
+            var produto = await _context.Produtos
+                .FirstOrDefaultAsync(p => p.Nome.ToLower() == venda.ProdutoNome.ToLower());
+            if (produto != null)
+                produto.Quantidade += venda.Quantidade;
+
+            await _context.SaveChangesAsync();
             return Ok(new { mensagem = "Venda cancelada com sucesso." });
+        }
+
+        // PUT - DEVOLVER (cliente — só quando status == "Entregue")
+        [HttpPut("devolver/{id}")]
+        public async Task<IActionResult> Devolver(int id, [FromBody] DevolverDto dto)
+        {
+            var venda = await _context.Vendas.FindAsync(id);
+            if (venda == null)
+                return NotFound("Venda não encontrada.");
+
+            if (venda.Status != "Entregue")
+                return BadRequest(new { mensagem = "Só é possível devolver um pedido já entregue." });
+
+            // "Defeito" → vira "Perda" (não volta ao estoque)
+            // outros    → vira "Devolvida" (volta ao estoque)
+            if (dto.Motivo == "Defeito")
+            {
+                venda.Status = "Perda";
+                venda.MotivoDevolicao = "Defeito";
+            }
+            else
+            {
+                venda.Status = "Devolvida";
+                venda.MotivoDevolicao = dto.Motivo == "Outro" && !string.IsNullOrWhiteSpace(dto.MotivoTexto)
+                    ? $"Outro: {dto.MotivoTexto}"
+                    : dto.Motivo; // "Desistencia"
+
+                // Volta ao estoque
+                var produto = await _context.Produtos
+                    .FirstOrDefaultAsync(p => p.Nome.ToLower() == venda.ProdutoNome.ToLower());
+                if (produto != null)
+                    produto.Quantidade += venda.Quantidade;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { mensagem = "Devolução registrada.", status = venda.Status });
         }
     }
 }

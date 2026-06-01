@@ -28,7 +28,7 @@ namespace TechBuildAPI.Controllers
             public string ProdutoTipo { get; set; } = "";
             public decimal Preco { get; set; }
             public int Quantidade { get; set; }
-            public string Origem { get; set; } = ""; // 🔥 IMPORTANTE
+            public string Origem { get; set; } = "";
         }
 
         [HttpPost("finalizar")]
@@ -47,7 +47,7 @@ namespace TechBuildAPI.Controllers
             {
                 UsuarioId = dto.UsuarioId,
                 DataCompra = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brasil),
-                Status = "Ativa"
+                Status = "Em Preparo"   // ← novo status inicial
             };
 
             _context.Compras.Add(compra);
@@ -55,7 +55,6 @@ namespace TechBuildAPI.Controllers
 
             foreach (var item in dto.Itens)
             {
-                // 🔹 ITEM DA COMPRA
                 _context.CompraItens.Add(new CompraItem
                 {
                     CompraId = compra.Id,
@@ -63,10 +62,9 @@ namespace TechBuildAPI.Controllers
                     ProdutoTipo = item.ProdutoTipo,
                     Preco = item.Preco,
                     Quantidade = item.Quantidade,
-                    Origem = item.Origem // 🔥 SALVA
+                    Origem = item.Origem
                 });
 
-                // 🔹 VENDA (AGORA COM ORIGEM)
                 _context.Vendas.Add(new Vendas
                 {
                     UsuarioId = dto.UsuarioId,
@@ -75,12 +73,12 @@ namespace TechBuildAPI.Controllers
                     ProdutoTipo = item.ProdutoTipo,
                     Preco = item.Preco,
                     Quantidade = item.Quantidade,
-                    Origem = item.Origem, // 🔥 ESSENCIAL
-                    Status = "Concluida",
+                    Origem = item.Origem,
+                    Status = "Em Preparo",   // ← novo status inicial
                     Data = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brasil)
                 });
 
-                // 🔹 ATUALIZA ESTOQUE
+                // Baixa o estoque
                 var produto = await _context.Produtos
                     .FirstOrDefaultAsync(p => p.Nome.ToLower() == item.ProdutoNome.ToLower());
 
@@ -113,28 +111,38 @@ namespace TechBuildAPI.Controllers
             return Ok(compras);
         }
 
+        // Cancela a compra inteira — só se TODAS as vendas ainda estão "Em Preparo"
         [HttpPut("cancelar/{id}")]
         public async Task<IActionResult> CancelarCompra(int id)
         {
             var compra = await _context.Compras.FindAsync(id);
-
             if (compra == null)
                 return NotFound(new { mensagem = "Compra não encontrada." });
-
-            compra.Status = "Cancelada";
 
             var vendas = await _context.Vendas
                 .Where(v => v.CompraId == id)
                 .ToListAsync();
 
-            foreach (var venda in vendas)
+            // Verifica se ainda é possível cancelar
+            bool podeCancelar = vendas.All(v => v.Status == "Em Preparo" || v.Status == "Cancelada");
+            if (!podeCancelar)
+                return BadRequest(new { mensagem = "Não é possível cancelar: um ou mais itens já foram enviados." });
+
+            compra.Status = "Cancelada";
+
+            foreach (var venda in vendas.Where(v => v.Status == "Em Preparo"))
             {
                 venda.Status = "Cancelada";
+
+                // Devolve ao estoque
+                var produto = await _context.Produtos
+                    .FirstOrDefaultAsync(p => p.Nome.ToLower() == venda.ProdutoNome.ToLower());
+                if (produto != null)
+                    produto.Quantidade += venda.Quantidade;
             }
 
             await _context.SaveChangesAsync();
-
-            return Ok(new { mensagem = "Compra e vendas canceladas com sucesso." });
+            return Ok(new { mensagem = "Compra cancelada com sucesso." });
         }
     }
 }
