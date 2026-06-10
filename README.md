@@ -137,7 +137,3 @@ Em Preparo → Em Transporte → Entregue
 - **Perda** — devolução por defeito (não volta ao estoque)
 
 ---
-
-## Autores
-
-Desenvolvido por **Thallis** e equipe como Projeto Integrador Multidisciplinar (PIM).
