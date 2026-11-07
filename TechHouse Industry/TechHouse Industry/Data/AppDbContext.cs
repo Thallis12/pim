@@ -29,6 +29,20 @@ namespace TechBuildAPI.Data
             modelBuilder.Entity<Vendas>()
                 .Property(v => v.Preco)
                 .HasPrecision(10, 2);
+
+            // As tabelas Produtos e Vendas têm TRIGGERS no banco.
+            // O Entity Framework precisa saber disso: sem este aviso ele grava
+            // usando "OUTPUT", que o SQL Server não aceita em tabelas com trigger
+            // (era isso que dava erro 500 ao editar/criar produto).
+            modelBuilder.Entity<Produto>()
+                .ToTable(t => t.HasTrigger("trg_Produtos_Auditoria"));
+
+            modelBuilder.Entity<Vendas>()
+                .ToTable(t =>
+                {
+                    t.HasTrigger("trg_Vendas_ValidarStatus");
+                    t.HasTrigger("trg_Vendas_AtualizarStatusCompra");
+                });
         }
     }
 }

@@ -1,122 +1,94 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TechBuildAPI.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TechBuildAPI.Models;
+using TechBuildAPI.Services;
 
 namespace TechBuildAPI.Controllers
 {
+    // =====================================================================
+    // CAMADA DE APRESENTAÇÃO (API) - PRODUTOS
+    // O Controller só recebe o pedido HTTP, chama o Service e devolve a
+    // resposta. Regras ficam no ProdutoService; banco no ProdutoRepository.
+    // =====================================================================
     [ApiController]
     [Route("api/[controller]")]
     public class ProdutosController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ProdutoService _produtos;
 
-        public ProdutosController(AppDbContext context)
+        public ProdutosController(ProdutoService produtos)
         {
-            _context = context;
+            _produtos = produtos;
         }
 
-        // =========================
-        // GET ALL
-        // =========================
+        // GET api/Produtos - catálogo público
+        [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<List<Produto>>> Get()
-        {
-            return await _context.Produtos.ToListAsync();
-        }
+        public async Task<ActionResult<List<Produto>>> Get() => await _produtos.Listar();
 
-        // =========================
-        // GET BY ID
-        // =========================
-        [HttpGet("{id}")]
+        // GET api/Produtos/versao - número que muda quando algum produto muda (tempo real)
+        [AllowAnonymous]
+        [HttpGet("versao")]
+        public async Task<IActionResult> GetVersao() => Ok(new { versao = await _produtos.VersaoCatalogo() });
+
+        [AllowAnonymous]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<Produto>> GetById(int id)
         {
-            var produto = await _context.Produtos.FindAsync(id);
-
-            if (produto == null)
-                return NotFound();
-
-            return Ok(produto);
+            var produto = await _produtos.Obter(id);
+            return produto == null ? NotFound() : Ok(produto);
         }
 
-        // =========================
-        // GET BY TIPO
-        // =========================
+        [AllowAnonymous]
         [HttpGet("tipo/{tipo}")]
-        public async Task<ActionResult<List<Produto>>> GetByTipo(string tipo)
-        {
-            var produtos = await _context.Produtos
-                .Where(p => p.Tipo == tipo)
-                .ToListAsync();
+        public async Task<ActionResult<List<Produto>>> GetByTipo(string tipo) => Ok(await _produtos.ListarPorTipo(tipo));
 
-            return Ok(produtos);
-        }
-
-        // =========================
-        // GET BY SOCKET
-        // =========================
+        [AllowAnonymous]
         [HttpGet("socket/{socket}")]
-        public async Task<ActionResult<List<Produto>>> GetBySocket(string socket)
-        {
-            var produtos = await _context.Produtos
-                .Where(p => p.Socket == socket)
-                .ToListAsync();
+        public async Task<ActionResult<List<Produto>>> GetBySocket(string socket) => Ok(await _produtos.ListarPorSocket(socket));
 
-            return Ok(produtos);
-        }
-
-        // =========================
-        // POST (CRIAR)
-        // =========================
+        // POST - criar (somente admin)
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Produto>> Post(Produto produto)
         {
-            _context.Produtos.Add(produto);
-            await _context.SaveChangesAsync();
-
-            return Ok(produto);
+            try
+            {
+                return Ok(await _produtos.Criar(produto));
+            }
+            catch (RegraDeNegocioException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
 
-        // =========================
-        // PUT (EDITAR)
-        // =========================
-        [HttpPut("{id}")]
+        // PUT - editar (somente admin)
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Put(int id, Produto produto)
         {
             if (id != produto.Id)
-                return BadRequest("ID inválido");
+                return BadRequest(new { mensagem = "ID inválido." });
 
-            _context.Entry(produto).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            try
+            {
+                return await _produtos.Atualizar(id, produto) ? NoContent() : NotFound();
+            }
+            catch (RegraDeNegocioException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
 
-        // =========================
-        // DELETE
-        // =========================
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var produto = await _context.Produtos.FindAsync(id);
+        // DELETE - excluir (somente admin)
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id) =>
+            await _produtos.Excluir(id) ? NoContent() : NotFound();
 
-            if (produto == null)
-                return NotFound();
-
-            _context.Produtos.Remove(produto);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        // =========================
-        // REGRA DE NEGÓCIO (DIFERENCIAL PIM)
-        // =========================
+        // Regra de negócio extra: consumo total de energia do catálogo
+        [AllowAnonymous]
         [HttpGet("consumo-total")]
-        public async Task<ActionResult<int>> GetConsumoTotal()
-        {
-            var total = await _context.Produtos.SumAsync(p => p.ConsumoEnergia);
-            return Ok(total);
-        }
+        public async Task<ActionResult<int>> GetConsumoTotal() => Ok(await _produtos.ConsumoTotal());
     }
 }

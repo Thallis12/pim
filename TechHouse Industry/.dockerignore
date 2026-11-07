@@ -1,0 +1,6 @@
+# Arquivos que NÃO entram na imagem Docker
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/appsettings.Development.json

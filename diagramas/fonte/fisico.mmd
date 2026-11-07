@@ -1,0 +1,79 @@
+---
+title: TechBuild - Modelo Físico (SQL Server, banco TechHouse IndustryDB)
+---
+erDiagram
+    Usuarios ||--o{ Compras : "FK UsuarioId"
+    Usuarios ||--o{ CarrinhoItens : "FK_CarrinhoItens_Usuarios"
+    Usuarios ||--o{ Vendas : "FK_Vendas_Usuarios"
+    Produtos ||--o{ CarrinhoItens : "FK_CarrinhoItens_Produtos (ON DELETE CASCADE)"
+    Compras ||--|{ CompraItens : "FK CompraId"
+    Compras |o--|{ Vendas : "FK_Vendas_Compras"
+    Produtos ||--o{ LogAuditoria : "trg_Produtos_Auditoria grava"
+    Vendas ||--o{ LogAuditoria : "trg_Vendas_ValidarStatus grava"
+
+    Usuarios {
+        INT Id PK "IDENTITY, NOT NULL"
+        NVARCHAR(150) Email UK "NOT NULL"
+        NVARCHAR(100) Senha "NOT NULL (hash BCrypt)"
+        BIT IsAdmin "NOT NULL, DEFAULT 0"
+        NVARCHAR(100) Nome "NULL"
+    }
+    Produtos {
+        INT Id PK "IDENTITY, NOT NULL"
+        VARCHAR(100) Nome "NULL, IX_Produtos_Nome"
+        VARCHAR(50) Tipo "NULL, IX_Produtos_Tipo"
+        DECIMAL Preco "(10,2), NULL, CHECK Preco >= 0"
+        VARCHAR(50) Socket "NULL"
+        INT ConsumoEnergia "NULL"
+        NVARCHAR(MAX) ImagemUrl "NULL (JPEG em base64)"
+        INT Potencia "NULL"
+        INT Quantidade "NOT NULL, DEFAULT 0, CHECK >= 0"
+        TRIGGER trg_Produtos_Auditoria "AFTER INSERT, UPDATE, DELETE"
+    }
+    Compras {
+        INT Id PK "IDENTITY, NOT NULL"
+        INT UsuarioId FK "NOT NULL, IX_Compras_UsuarioId"
+        DATETIME DataCompra "NOT NULL, DEFAULT GETDATE()"
+        NVARCHAR(30) Status "NOT NULL, DEFAULT Ativa"
+    }
+    CompraItens {
+        INT Id PK "IDENTITY, NOT NULL"
+        INT CompraId FK "NOT NULL, IX_CompraItens_CompraId"
+        NVARCHAR(200) ProdutoNome "NOT NULL"
+        NVARCHAR(100) ProdutoTipo "NOT NULL"
+        DECIMAL Preco "(10,2), NOT NULL"
+        INT Quantidade "NOT NULL"
+        NVARCHAR(30) Origem "NOT NULL"
+    }
+    Vendas {
+        INT Id PK "IDENTITY, NOT NULL"
+        DATETIME2 Data "NOT NULL"
+        DECIMAL Preco "(10,2), NOT NULL"
+        NVARCHAR(MAX) ProdutoNome "NULL"
+        NVARCHAR(MAX) ProdutoTipo "NULL"
+        INT Quantidade "NOT NULL, CHECK > 0"
+        NVARCHAR(50) Status "NULL, CHECK: 6 status válidos"
+        INT UsuarioId FK "NOT NULL, IX_Vendas_UsuarioId"
+        INT CompraId FK "NULL, IX_Vendas_CompraId"
+        NVARCHAR(50) Origem "NULL"
+        NVARCHAR(500) MotivoDevolicao "NULL"
+        TRIGGER trg_Vendas_ValidarStatus "AFTER UPDATE"
+        TRIGGER trg_Vendas_AtualizarStatusCompra "AFTER UPDATE"
+    }
+    CarrinhoItens {
+        INT Id PK "IDENTITY, NOT NULL"
+        INT UsuarioId FK "NOT NULL"
+        INT ProdutoId FK "NOT NULL"
+        INT Quantidade "NOT NULL, CHECK > 0"
+        NVARCHAR(20) Origem "NOT NULL, DEFAULT Carrinho, CHECK Carrinho/MontePC"
+        DATETIME AtualizadoEm "NOT NULL, DEFAULT GETDATE()"
+        UNIQUE UQ_CarrinhoItens "(UsuarioId, ProdutoId, Origem)"
+    }
+    LogAuditoria {
+        INT Id PK "IDENTITY, NOT NULL"
+        NVARCHAR(50) Tabela "NOT NULL, IX_LogAuditoria_Tabela"
+        NVARCHAR(20) Acao "NOT NULL"
+        INT RegistroId "NOT NULL"
+        NVARCHAR(500) Descricao "NOT NULL"
+        DATETIME DataHora "NOT NULL, DEFAULT GETDATE()"
+    }

@@ -1,0 +1,60 @@
+# =====================================================================
+# DOCKER COMPOSE - sobe o sistema completo com um comando:
+#     docker compose up -d
+#
+# Containers:
+#   sqlserver   -> banco SQL Server 2022
+#   banco-init  -> na PRIMEIRA vez, cria o banco com bancoPIM_completo.sql
+#                  (tabelas, dados, procedures, triggers e views)
+#   api         -> API .NET + site (abre em http://localhost:8080)
+#
+# As senhas ficam no arquivo .env (copie .env.exemplo para .env).
+# =====================================================================
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_PID: "Express"
+    ports:
+      - "14333:1433"              # acesso pelo SSMS: localhost,14333
+    volumes:
+      - dados-sql:/var/opt/mssql  # os dados continuam salvos se o container reiniciar
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      retries: 12
+
+  banco-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SA_PASSWORD: ${SA_PASSWORD}
+    volumes:
+      - ./bancoPIM_completo.sql:/scripts/bancoPIM_completo.sql:ro
+      - ./docker/init-banco.sh:/scripts/init-banco.sh:ro
+    # Só cria o banco se ele ainda não existir (não apaga dados de quem já usa)
+    entrypoint: ["/bin/bash", "/scripts/init-banco.sh"]
+    restart: "no"
+
+  api:
+    build:
+      context: "./TechHouse Industry"
+    depends_on:
+      banco-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=TechHouse IndustryDB;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Jwt__Key: ${JWT_KEY}
+      Cors__Origens__0: "http://localhost:8080"
+      Cors__Origens__1: "http://127.0.0.1:5500"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  dados-sql:

@@ -4,3 +4,7 @@ obj/
 *.user
 *.suo
 *.log
+# Backups locais do banco e arquivos de teste (não vão para o GitHub)
+backup/
+# Senhas do docker compose
+.env

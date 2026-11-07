@@ -1,23 +1,28 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TechBuildAPI.Data;
-using TechBuildAPI.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TechBuildAPI.Repositories;
+using TechBuildAPI.Services;
 
 namespace TechBuildAPI.Controllers
 {
+    // CAMADA DE APRESENTAÇÃO (API) - COMPRAS
+    // Controller -> PedidoService -> PedidoRepository -> procedures do banco
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ComprasController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly PedidoService _pedidos;
 
-        public ComprasController(AppDbContext context)
+        public ComprasController(PedidoService pedidos)
         {
-            _context = context;
+            _pedidos = pedidos;
         }
 
         public class FinalizarCompraDto
         {
+            // Mantido só por compatibilidade com o front antigo; é IGNORADO.
+            // O usuário da compra vem sempre do token JWT.
             public int UsuarioId { get; set; }
             public List<ItemDto> Itens { get; set; } = new();
         }
@@ -25,124 +30,60 @@ namespace TechBuildAPI.Controllers
         public class ItemDto
         {
             public string ProdutoNome { get; set; } = "";
+            // Preço e tipo enviados pelo app são ignorados: o banco usa os valores dele.
             public string ProdutoTipo { get; set; } = "";
             public decimal Preco { get; set; }
             public int Quantidade { get; set; }
             public string Origem { get; set; } = "";
         }
 
+        // POST api/Compras/finalizar -> procedure dbo.sp_FinalizarCompra
         [HttpPost("finalizar")]
         public async Task<IActionResult> Finalizar([FromBody] FinalizarCompraDto dto)
         {
-            if (dto.UsuarioId <= 0 || dto.Itens == null || dto.Itens.Count == 0)
-                return BadRequest(new { mensagem = "Compra inválida." });
-
-            var usuario = await _context.Usuarios.FindAsync(dto.UsuarioId);
-            if (usuario == null)
-                return BadRequest(new { mensagem = "Usuário não encontrado." });
-
-            var brasil = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-
-            var compra = new Compra
+            var itens = (dto.Itens ?? new()).Select(i => new ItemDoPedido
             {
-                UsuarioId = dto.UsuarioId,
-                DataCompra = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brasil),
-                Status = "Em Preparo"   // ← novo status inicial
-            };
+                Nome = i.ProdutoNome ?? "",
+                Quantidade = i.Quantidade,
+                Origem = i.Origem
+            }).ToList();
 
-            _context.Compras.Add(compra);
-            await _context.SaveChangesAsync();
-
-            foreach (var item in dto.Itens)
+            try
             {
-                _context.CompraItens.Add(new CompraItem
-                {
-                    CompraId = compra.Id,
-                    ProdutoNome = item.ProdutoNome,
-                    ProdutoTipo = item.ProdutoTipo,
-                    Preco = item.Preco,
-                    Quantidade = item.Quantidade,
-                    Origem = item.Origem
-                });
-
-                _context.Vendas.Add(new Vendas
-                {
-                    UsuarioId = dto.UsuarioId,
-                    CompraId = compra.Id,
-                    ProdutoNome = item.ProdutoNome,
-                    ProdutoTipo = item.ProdutoTipo,
-                    Preco = item.Preco,
-                    Quantidade = item.Quantidade,
-                    Origem = item.Origem,
-                    Status = "Em Preparo",   // ← novo status inicial
-                    Data = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brasil)
-                });
-
-                // Baixa o estoque
-                var produto = await _context.Produtos
-                    .FirstOrDefaultAsync(p => p.Nome.ToLower() == item.ProdutoNome.ToLower());
-
-                if (produto != null)
-                {
-                    produto.Quantidade -= item.Quantidade;
-                    if (produto.Quantidade < 0)
-                        produto.Quantidade = 0;
-                }
+                var compraId = await _pedidos.FinalizarCompra(User.ObterUsuarioId(), itens);
+                return Ok(new { mensagem = "Compra finalizada com sucesso.", compraId });
             }
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new
+            catch (RegraDeNegocioException ex)
             {
-                mensagem = "Compra finalizada com sucesso.",
-                compraId = compra.Id
-            });
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
 
-        [HttpGet("usuario/{usuarioId}")]
+        // GET api/Compras/usuario/5 - compras com os itens
+        [HttpGet("usuario/{usuarioId:int}")]
         public async Task<IActionResult> GetComprasDoUsuario(int usuarioId)
         {
-            var compras = await _context.Compras
-                .Where(c => c.UsuarioId == usuarioId)
-                .Include(c => c.Itens)
-                .OrderByDescending(c => c.Id)
-                .ToListAsync();
+            // Cliente só vê as próprias compras; admin vê de qualquer usuário
+            if (usuarioId != User.ObterUsuarioId() && !User.EhAdmin())
+                return Forbid();
 
-            return Ok(compras);
+            return Ok(await _pedidos.ComprasDoUsuario(usuarioId));
         }
 
-        // Cancela a compra inteira — só se TODAS as vendas ainda estão "Em Preparo"
-        [HttpPut("cancelar/{id}")]
+        // PUT api/Compras/cancelar/5 -> procedure dbo.sp_CancelarCompra
+        [HttpPut("cancelar/{id:int}")]
         public async Task<IActionResult> CancelarCompra(int id)
         {
-            var compra = await _context.Compras.FindAsync(id);
-            if (compra == null)
-                return NotFound(new { mensagem = "Compra não encontrada." });
-
-            var vendas = await _context.Vendas
-                .Where(v => v.CompraId == id)
-                .ToListAsync();
-
-            // Verifica se ainda é possível cancelar
-            bool podeCancelar = vendas.All(v => v.Status == "Em Preparo" || v.Status == "Cancelada");
-            if (!podeCancelar)
-                return BadRequest(new { mensagem = "Não é possível cancelar: um ou mais itens já foram enviados." });
-
-            compra.Status = "Cancelada";
-
-            foreach (var venda in vendas.Where(v => v.Status == "Em Preparo"))
+            try
             {
-                venda.Status = "Cancelada";
-
-                // Devolve ao estoque
-                var produto = await _context.Produtos
-                    .FirstOrDefaultAsync(p => p.Nome.ToLower() == venda.ProdutoNome.ToLower());
-                if (produto != null)
-                    produto.Quantidade += venda.Quantidade;
+                await _pedidos.CancelarCompra(id, User.ObterUsuarioId(), User.EhAdmin());
+                return Ok(new { mensagem = "Compra cancelada com sucesso." });
             }
-
-            await _context.SaveChangesAsync();
-            return Ok(new { mensagem = "Compra cancelada com sucesso." });
+            catch (RegraDeNegocioException ex)
+            {
+                if (ex.SemPermissao) return Forbid();
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
     }
 }

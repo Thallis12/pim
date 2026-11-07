@@ -1,0 +1,54 @@
+graph MER {
+  graph [layout=neato, overlap=false, splines=true, sep="+18", pad=0.4, dpi=200, fontname="Helvetica", label=<<B>TechBuild — Modelo Entidade-Relacionamento (MER conceitual, notação de Chen)</B>>, labelloc=t, fontsize=20, bgcolor="white"];
+  node [fontname="Helvetica", fontsize=12];
+  edge [fontname="Helvetica", fontsize=12, color="#5B6576"];
+
+  // Entidades
+  node [shape=box, style="filled,bold", fillcolor="#0F2A5F", fontcolor="white", color="#0F2A5F", width=1.6, height=0.6, fontsize=14];
+  USUARIO [label="USUÁRIO", pos="0,0!"];
+  COMPRA [label="COMPRA", pos="5.2,0!"];
+  ITEM [label="ITEM DA COMPRA\n(Venda)", pos="10.4,0!"];
+  PRODUTO [label="PRODUTO", pos="10.4,-5.4!"];
+  CARRINHO [label="ITEM DO CARRINHO", pos="5.2,-5.4!"];
+  LOG [label="LOG DE AUDITORIA", pos="14.6,-8.4!"];
+
+  // Relacionamentos
+  node [shape=diamond, style="filled", fillcolor="#F59E0B", fontcolor="#0F2A5F", color="#B45309", width=1.5, height=0.9, fontsize=12];
+  realiza [label="realiza", pos="2.6,0!"];
+  contem [label="contém", pos="7.8,0!"];
+  refere [label="refere-se a", pos="10.4,-2.7!"];
+  monta [label="monta", pos="2.6,-2.7!"];
+  inclui [label="inclui", pos="7.8,-5.4!"];
+  registra [label="registra\n(trigger)", pos="12.6,-7.0!"];
+
+  USUARIO -- realiza [label="1"];  realiza -- COMPRA [label="N"];
+  COMPRA -- contem [label="1"];    contem -- ITEM [label="N"];
+  ITEM -- refere [label="N"];      refere -- PRODUTO [label="1"];
+  USUARIO -- monta [label="1"];    monta -- CARRINHO [label="N"];
+  CARRINHO -- inclui [label="N"];  inclui -- PRODUTO [label="1"];
+  PRODUTO -- registra [label="1"]; registra -- LOG [label="N"];
+
+  // Atributos (sublinhado = identificador)
+  node [shape=ellipse, style="filled", fillcolor="#EEF2F7", fontcolor="#1A2233", color="#93A4C3", width=0, height=0, fontsize=11];
+  u1 [label=<<U>Id</U>>, pos="-1.6,1.5!"]; u2 [label="Nome", pos="-0.4,1.9!"]; u3 [label="E-mail (único)", pos="1.2,1.6!"];
+  u4 [label="Senha (hash BCrypt)", pos="-2.2,0!"]; u5 [label="IsAdmin", pos="-1.4,-1.4!"];
+  USUARIO -- u1; USUARIO -- u2; USUARIO -- u3; USUARIO -- u4; USUARIO -- u5;
+
+  c1 [label=<<U>Id</U>>, pos="4.2,1.5!"]; c2 [label="Data da compra", pos="5.6,1.9!"]; c3 [label="Status", pos="6.6,1.3!"];
+  COMPRA -- c1; COMPRA -- c2; COMPRA -- c3;
+
+  i1 [label=<<U>Id</U>>, pos="9.2,1.6!"]; i2 [label="Produto (nome, tipo)", pos="10.8,2.0!"]; i3 [label="Preço", pos="12.3,1.3!"];
+  i4 [label="Quantidade", pos="12.6,0.2!"]; i5 [label="Status do item", pos="12.6,-0.9!"]; i6 [label="Origem\n(Carrinho / MontePC)", pos="8.9,-1.4!"]; i7 [label="Motivo da devolução", pos="12.4,-1.9!"];
+  ITEM -- i1; ITEM -- i2; ITEM -- i3; ITEM -- i4; ITEM -- i5; ITEM -- i6; ITEM -- i7;
+
+  p1 [label=<<U>Id</U>>, pos="12.4,-4.2!"]; p2 [label="Nome", pos="12.8,-5.1!"]; p3 [label="Tipo (categoria)", pos="12.9,-6.0!"];
+  p4 [label="Preço", pos="9.0,-7.0!"]; p5 [label="Estoque", pos="10.4,-7.4!"]; p6 [label="Socket", pos="8.6,-6.2!"];
+  p7 [label="Consumo / Potência", pos="11.9,-3.3!"]; p8 [label="Imagem", pos="8.7,-4.3!"];
+  PRODUTO -- p1; PRODUTO -- p2; PRODUTO -- p3; PRODUTO -- p4; PRODUTO -- p5; PRODUTO -- p6; PRODUTO -- p7; PRODUTO -- p8;
+
+  k1 [label=<<U>Id</U>>, pos="4.0,-6.8!"]; k2 [label="Quantidade", pos="5.4,-7.2!"]; k3 [label="Origem", pos="6.7,-6.8!"]; k4 [label="Atualizado em", pos="3.6,-4.2!"];
+  CARRINHO -- k1; CARRINHO -- k2; CARRINHO -- k3; CARRINHO -- k4;
+
+  l1 [label=<<U>Id</U>>, pos="16.4,-7.4!"]; l2 [label="Tabela / Ação", pos="16.6,-8.6!"]; l3 [label="Descrição", pos="15.9,-9.6!"]; l4 [label="Data e hora", pos="13.9,-9.7!"];
+  LOG -- l1; LOG -- l2; LOG -- l3; LOG -- l4;
+}

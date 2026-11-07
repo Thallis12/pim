@@ -1,3 +1,55 @@
+/* ===================================================================== */
+/* PALETA DE CORES - TechBuild (PIM IV) - loja online de hardware         */
+/*                                                                       */
+/* HARMONIA: esquema COMPLEMENTAR do círculo cromático.                  */
+/*   Azul (matiz 220°)  <->  Âmbar/laranja (matiz 40°) = 180° de distância */
+/*   Cores opostas no círculo se valorizam: o azul acalma e o âmbar salta  */
+/*   aos olhos, por isso o âmbar fica SÓ nos botões de compra.            */
+/*                                                                       */
+/* PROPORÇÃO 60-30-10 (regra clássica de design):                        */
+/*   60% neutros claros (fundo e cards, levemente azulados - matiz 220°)  */
+/*   30% azul / azul-marinho (cabeçalho, textos, botões comuns)           */
+/*   10% âmbar (Comprar, Adicionar, Carrinho, Finalizar compra)           */
+/*                                                                       */
+/* PSICOLOGIA DAS CORES EM VENDAS:                                       */
+/*   Azul = confiança e competência (Labrecque & Milne, 2012): a pessoa   */
+/*   precisa confiar na loja para pagar. Âmbar/laranja = urgência e ação, */
+/*   usado em botões de compra por grandes lojas online.                  */
+/*                                                                       */
+/* ACESSIBILIDADE: todo texto tem contraste mínimo de 4,5:1 (WCAG 2.1).   */
+/*   Ex.: texto azul-marinho no botão âmbar = 6,45:1.                     */
+/* Verde / vermelho aparecem só como sinal (em estoque, sem estoque).     */
+/* ===================================================================== */
+:root {
+  /* 60% - neutros (todos puxados para o azul, matiz 220°) */
+  --fundo:          #F4F6FA;
+  --superficie:     #FFFFFF;
+  --superficie-2:   #EEF2F7;
+  --borda:          #DDE3EC;
+  --texto:          #1A2233;  /* 15,9:1 no branco */
+  --texto-suave:    #5B6576;  /*  5,9:1 no branco */
+
+  /* 30% - azul (confiança) */
+  --topo:           #0F2A5F;  /* azul-marinho do cabeçalho      */
+  --primaria:       #1D4ED8;  /* botões comuns e links (6,7:1)  */
+  --primaria-hover: #1E40AF;
+  --primaria-clara: #DBEAFE;
+
+  /* 10% - âmbar (complementar do azul: ação / compra) */
+  --cta:            #F59E0B;
+  --cta-hover:      #FBBF24;
+  --cta-texto:      #0F2A5F;  /* 6,45:1 sobre o âmbar */
+
+  /* sinais */
+  --sucesso:        #15803D;
+  --alerta:         #B45309;
+  --erro:           #B91C1C;
+
+  --sombra:         0 1px 3px rgba(15, 42, 95, 0.08), 0 4px 12px rgba(15, 42, 95, 0.06);
+  --sombra-forte:   0 10px 24px rgba(15, 42, 95, 0.16);
+  --raio:           14px;
+}
+
 /* ========================= */
 /* RESET */
 /* ========================= */
@@ -12,9 +64,9 @@ html {
 body {
   margin: 0;
   padding-top: 70px;
-  font-family: Arial, sans-serif;
-  background: #020617;
-  color: #ffffff;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
   overflow-x: hidden;
 }
 
@@ -36,14 +88,15 @@ body {
 
   padding: 12px 20px;
 
-  border-bottom: 1px solid rgba(0, 229, 255, 0.4);
-  background: #020617;
+  border-bottom: 1px solid var(--topo);
+  background: var(--topo);
+  box-shadow: var(--sombra);
 
   flex-wrap: wrap;
 }
 
 .logo {
-  color: #00e5ff;
+  color: #FFFFFF;
   font-size: 28px;
   font-weight: bold;
 }
@@ -59,9 +112,9 @@ body {
 /* ========================= */
 .btn-topo,
 button {
-  background: linear-gradient(45deg, #00e5ff, #00bcd4);
+  background: var(--primaria);
   border: none;
-  color: #001018;
+  color: #FFFFFF;
   padding: 10px 14px;
   border-radius: 8px;
   cursor: pointer;
@@ -71,8 +124,29 @@ button {
 
 .btn-topo:hover,
 button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+  background: var(--primaria-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--sombra-forte);
+}
+
+button:disabled {
+  background: var(--borda) !important;
+  color: var(--texto-suave) !important;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Botões de COMPRA (Comprar, Adicionar, Finalizar): laranja para se destacar */
+.btn-comprar,
+.btn-finalizar {
+  background: var(--cta);
+  color: var(--cta-texto);
+}
+
+.btn-comprar:hover,
+.btn-finalizar:hover {
+  background: var(--cta-hover);
 }
 
 .btn-mini {
@@ -83,8 +157,8 @@ button:hover {
 }
 
 .btn-remover {
-  background: linear-gradient(45deg, #ff4d4d, #e53935);
-  color: white;
+  background: var(--erro);
+  color: #FFFFFF;
 }
 
 .btn-login {
@@ -129,8 +203,8 @@ button:hover {
 /* CARD */
 /* ========================= */
 .card {
-  background: #03101f;
-  border: 1px solid #00e5ff;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
   border-radius: 12px;
   padding: 14px;
   transition: 0.2s ease;
@@ -140,12 +214,13 @@ button:hover {
   display: flex;
   flex-direction: column;
 
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--sombra);
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0 16px rgba(0, 229, 255, 0.4);
+  transform: translateY(-4px);
+  border-color: var(--primaria);
+  box-shadow: var(--sombra-forte);
 }
 
 /* IMAGEM */
@@ -154,13 +229,14 @@ button:hover {
   height: 180px;
   object-fit: contain;
   border-radius: 8px;
-  background: #0f172a;
+  background: #FFFFFF;
   flex-shrink: 0;
   margin-bottom: 10px;
 }
 
 /* TEXTO */
 .card h3 {
+  color: var(--texto);
   font-size: 18px;
   margin: 8px 0 4px;
   min-height: 44px;
@@ -168,11 +244,14 @@ button:hover {
 
 .card p {
   margin: 2px 0;
+  color: var(--texto-suave);
 }
 
 /* PREÇO */
+.card .preco,
 .preco {
-  color: #7df9ff;
+  color: var(--texto);
+  font-size: 22px;
   font-weight: bold;
   margin-top: auto;
 }
@@ -186,17 +265,18 @@ button:hover {
   width: 320px;
   max-width: 100%;
   height: 100vh;
-  background: #03101f;
+  background: var(--superficie);
+  color: var(--texto);
   z-index: 9999;
   padding: 24px 18px 18px;
-  box-shadow: 0 0 18px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--sombra-forte);
   overflow-y: auto;
   transition: all 0.35s ease;
 }
 
 .filtro {
   left: -100%;
-  border-right: 1px solid #00e5ff;
+  border-right: 1px solid var(--borda);
 }
 
 .filtro.ativo {
@@ -205,7 +285,7 @@ button:hover {
 
 .carrinho {
   right: -100%;
-  border-left: 1px solid #00e5ff;
+  border-left: 1px solid var(--borda);
 }
 
 .carrinho.ativo {
@@ -214,7 +294,7 @@ button:hover {
 
 .usuario-barra {
   right: -100%;
-  border-left: 1px solid #00e5ff;
+  border-left: 1px solid var(--borda);
 }
 
 .usuario-barra.ativo {
@@ -227,7 +307,7 @@ button:hover {
 #overlayLaterais {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(15, 42, 95, 0.35);
   display: none;
   z-index: 9998;
 }
@@ -243,14 +323,28 @@ button:hover {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 34px;
-  height: 34px;
+  width: 36px !important;   /* não estica no celular (lá todo botão ocupa 100%) */
+  height: 36px;
+  padding: 0 !important;    /* sem o espaçamento dos outros botões */
   border-radius: 50%;
-  background: #00e5ff;
-  color: black;
-  border: none;
+  background: var(--superficie-2);
+  color: var(--texto);
+  border: 1px solid var(--borda);
   cursor: pointer;
   font-weight: bold;
+  font-size: 18px;
+  line-height: 1;
+
+  /* deixa o X exatamente no centro do círculo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-fechar:hover {
+  background: var(--erro);
+  color: #FFFFFF;
+  transform: none;
 }
 
 /* ========================= */
@@ -263,7 +357,7 @@ button:hover {
 .label-filtro {
   display: block;
   margin-bottom: 14px;
-  color: #8befff;
+  color: var(--texto);
   font-weight: bold;
 }
 
@@ -280,7 +374,7 @@ button:hover {
   width: 100%;
   height: 8px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #00e5ff, #00bcd4);
+  background: var(--primaria-clara);
   outline: none;
   appearance: none;
   -webkit-appearance: none;
@@ -290,8 +384,8 @@ button:hover {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: white;
-  border: 3px solid #00e5ff;
+  background: #FFFFFF;
+  border: 3px solid var(--primaria);
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -301,8 +395,8 @@ button:hover {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: white;
-  border: 3px solid #00e5ff;
+  background: #FFFFFF;
+  border: 3px solid var(--primaria);
   cursor: pointer;
 }
 
@@ -310,7 +404,7 @@ button:hover {
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
-  color: #7df9ff;
+  color: var(--texto-suave);
 }
 
 .range-duplo {
@@ -332,11 +426,12 @@ button:hover {
 /* CARRINHO */
 /* ========================= */
 .carrinho-secao h3 {
-  color: #7df9ff;
+  color: var(--primaria);
 }
 
 .total-carrinho {
-  color: #7df9ff;
+  color: var(--texto);
+  font-size: 18px;
   font-weight: bold;
 }
 
@@ -370,7 +465,7 @@ button:hover {
 .qtd-badge {
   min-width: 32px;
   text-align: center;
-  color: #7df9ff;
+  color: var(--primaria);
   font-weight: bold;
 }
 
@@ -382,8 +477,8 @@ button:hover {
   bottom: 26px;
   left: 50%;
   transform: translateX(-50%);
-  background: #00e5ff;
-  color: #001018;
+  background: var(--topo);
+  color: #FFFFFF;
   padding: 12px 18px;
   border-radius: 10px;
   font-weight: bold;
@@ -405,9 +500,9 @@ button:hover {
   left: 50%;
   transform: translate(-50%, -50%);
 
-  background: #020617;
-  border: 1px solid #00e5ff55;
-  color: #e9fdff;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  color: var(--texto);
 
   padding: 20px;
   border-radius: 12px;
@@ -418,7 +513,7 @@ button:hover {
   width: 90%;
   max-width: 420px;
 
-  box-shadow: 0 0 18px rgba(0, 229, 255, 0.22);
+  box-shadow: var(--sombra-forte);
 }
 
 .msg-centro {
@@ -439,18 +534,19 @@ button:hover {
   margin-top: 6px;
   margin-bottom: 14px;
 
-  border: 1px solid #00e5ff;
+  border: 1px solid var(--borda);
   border-radius: 8px;
 
-  background: #0b1628;
-  color: white;
+  background: #FFFFFF;
+  color: var(--texto);
 
   outline: none;
 }
 
 .campo-login:focus,
 .input-file:hover {
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+  border-color: var(--primaria);
+  box-shadow: 0 0 0 3px var(--primaria-clara);
 }
 
 /* ========================= */
@@ -473,8 +569,8 @@ button:hover {
 }
 
 .tabela-estoque thead {
-  background: linear-gradient(90deg, #00e5ff, #00bcd4);
-  color: #001018;
+  background: var(--topo);
+  color: #FFFFFF;
 }
 
 .tabela-estoque th,
@@ -484,17 +580,17 @@ button:hover {
 }
 
 .tabela-estoque tbody tr {
-  background: #03101f !important;
-  border-bottom: 1px solid rgba(0, 229, 255, 0.2) !important;
+  background: var(--superficie) !important;
+  border-bottom: 1px solid var(--borda) !important;
   transition: 0.2s;
 }
 
 .tabela-estoque tbody tr:nth-child(even) {
-  background: #021422 !important;
+  background: var(--superficie-2) !important;
 }
 
 .tabela-estoque tbody tr:hover {
-  background: rgba(0, 229, 255, 0.15) !important;
+  background: var(--primaria-clara) !important;
   transform: scale(1.01);
   cursor: pointer;
 }
@@ -515,20 +611,20 @@ button:hover {
 }
 
 .linha-venda.par {
-  background: #03101f;
+  background: var(--superficie);
 }
 
 .linha-venda.impar {
-  background: #021422;
+  background: var(--superficie-2);
 }
 
 .linha-venda:hover {
-  background: rgba(0, 229, 255, 0.15) !important;
+  background: var(--primaria-clara) !important;
   transform: scale(1.01);
 }
 
 .detalhe-venda {
-  background: #020617 !important;
+  background: var(--fundo) !important;
   padding: 12px !important;
   border-radius: 10px !important;
 }
@@ -544,17 +640,18 @@ button:hover {
 }
 
 .card-dashboard {
-  background: #0f172a;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
   padding: 20px;
   border-radius: 14px;
   min-width: 220px;
   flex: 1;
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+  box-shadow: var(--sombra);
 }
 
 .card-dashboard h3 {
   margin-bottom: 10px;
-  color: #00e5ff;
+  color: var(--texto-suave);
 }
 
 .card-dashboard p {
@@ -584,13 +681,9 @@ button:hover {
 .grafico-box {
   position: relative;
 
-  background: linear-gradient(
-    145deg,
-    #0f172a,
-    #111c34
-  );
+  background: var(--superficie);
 
-  border: 1px solid rgba(0, 229, 255, 0.15);
+  border: 1px solid var(--borda);
 
   padding: 18px;
 
@@ -598,9 +691,7 @@ button:hover {
 
   overflow: hidden;
 
-  box-shadow:
-    0 0 18px rgba(0, 229, 255, 0.08),
-    inset 0 0 20px rgba(255,255,255,0.02);
+  box-shadow: var(--sombra);
 
   transition: 0.25s ease;
 }
@@ -617,21 +708,14 @@ button:hover {
   width: 100%;
   height: 4px;
 
-  background: linear-gradient(
-    90deg,
-    #00e5ff,
-    #00bcd4,
-    transparent
-  );
+  background: var(--primaria);
 }
 
 /* hover */
 .grafico-box:hover {
   transform: translateY(-4px);
 
-  box-shadow:
-    0 0 25px rgba(0, 229, 255, 0.18),
-    inset 0 0 20px rgba(255,255,255,0.03);
+  box-shadow: var(--sombra-forte);
 }
 
 /* título */
@@ -639,7 +723,7 @@ button:hover {
   margin-top: 0;
   margin-bottom: 18px;
 
-  color: #7df9ff;
+  color: var(--texto);
 
   font-size: 18px;
   font-weight: bold;
@@ -668,11 +752,11 @@ button:hover {
   top: 70px;
   z-index: 900;
 
-  background: #020617;
+  background: var(--fundo);
 
   padding: 10px 15px;
 
-  border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+  border-bottom: 1px solid var(--borda);
 }
 
 /* ========================= */
@@ -798,8 +882,8 @@ button:hover {
 }
 
 .grafico-box{
-  background:#0f172a;
-  border:1px solid rgba(255,255,255,0.08);
+  background:var(--superficie);
+  border:1px solid var(--borda);
   border-radius:16px;
   padding:20px;
   height:420px;
@@ -808,4 +892,187 @@ button:hover {
 .grafico-box canvas{
   width:100% !important;
   height:320px !important;
+}
+/* ===================================================================== */
+/* ACABAMENTO DA LOJA                                                     */
+/* ===================================================================== */
+
+/* ---------- Cabeçalho ---------- */
+.logo {
+  letter-spacing: -0.5px;
+}
+
+.logo span {
+  color: var(--cta);            /* "Build" em âmbar: a marca usa as duas cores */
+}
+
+.topo .btn-topo {
+  background: transparent;      /* botões do menu discretos no fundo azul      */
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.topo .btn-topo:hover {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.topo #btnCarrinhoTopo {
+  background: var(--cta);       /* carrinho em destaque: é onde a venda fecha  */
+  color: var(--cta-texto);
+  border-color: var(--cta);
+}
+
+.topo #btnCarrinhoTopo:hover {
+  background: var(--cta-hover);
+}
+
+/* ---------- Vitrine (cards de produto) ---------- */
+.grid-produtos {
+  max-width: 1280px;
+  margin: 0 auto;
+  gap: 22px;
+  padding: 24px 20px;
+}
+
+.card {
+  border-radius: var(--raio);
+  padding: 16px;
+}
+
+.card img {
+  background: var(--superficie-2);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.card p {
+  font-size: 13px;
+}
+
+.card .preco {
+  color: var(--topo);
+  font-size: 24px;
+  letter-spacing: -0.5px;
+  margin-bottom: 2px;
+}
+
+.card button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+/* ---------- Botões de compra (âmbar) ---------- */
+.btn-comprar:hover,
+.btn-finalizar:hover {
+  color: var(--cta-texto);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+}
+
+/* ---------- Monte seu PC: categorias como "chips" ---------- */
+.botoes-fixos button {
+  background: var(--superficie);
+  color: var(--topo);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+.botoes-fixos button:hover {
+  background: var(--primaria-clara);
+  border-color: var(--primaria);
+  box-shadow: none;
+}
+
+.resumo-monte {
+  max-width: 1280px;
+  margin: 0 auto 30px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+/* ---------- Painéis laterais ---------- */
+.painel-lateral h2 {
+  margin-top: 4px;
+  font-size: 22px;
+}
+
+.carrinho-secao li,
+#listaMonte li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+/* ---------- Títulos ---------- */
+h2 {
+  color: var(--texto);
+  letter-spacing: -0.3px;
+}
+
+.cabecalho-monte h2 {
+  max-width: 1280px;
+  margin: 8px auto;
+}
+
+/* Monte seu PC: cabeçalho alinhado com a vitrine */
+.cabecalho-monte > * {
+  max-width: 1240px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.cabecalho-monte .botoes-fixos {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+/* Botões - e + de quantidade: pequenos e centralizados */
+.controle-qtd {
+  justify-content: center;
+}
+
+.card .controle-qtd button {
+  width: 44px;
+  margin-top: 0;
+  padding: 8px 0;
+  font-size: 18px;
+}
+
+/* Celular: menu do topo numa linha só (rola para o lado), sem cobrir a vitrine */
+@media (max-width: 700px) {
+  .topo {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .menu-topo {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
+
+  .topo .btn-topo {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .cabecalho-monte {
+    top: 104px;
+  }
 }

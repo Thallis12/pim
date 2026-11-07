@@ -1,0 +1,1078 @@
+/* ===================================================================== */
+/* PALETA DE CORES - TechBuild (PIM IV) - loja online de hardware         */
+/*                                                                       */
+/* HARMONIA: esquema COMPLEMENTAR do círculo cromático.                  */
+/*   Azul (matiz 220°)  <->  Âmbar/laranja (matiz 40°) = 180° de distância */
+/*   Cores opostas no círculo se valorizam: o azul acalma e o âmbar salta  */
+/*   aos olhos, por isso o âmbar fica SÓ nos botões de compra.            */
+/*                                                                       */
+/* PROPORÇÃO 60-30-10 (regra clássica de design):                        */
+/*   60% neutros claros (fundo e cards, levemente azulados - matiz 220°)  */
+/*   30% azul / azul-marinho (cabeçalho, textos, botões comuns)           */
+/*   10% âmbar (Comprar, Adicionar, Carrinho, Finalizar compra)           */
+/*                                                                       */
+/* PSICOLOGIA DAS CORES EM VENDAS:                                       */
+/*   Azul = confiança e competência (Labrecque & Milne, 2012): a pessoa   */
+/*   precisa confiar na loja para pagar. Âmbar/laranja = urgência e ação, */
+/*   usado em botões de compra por grandes lojas online.                  */
+/*                                                                       */
+/* ACESSIBILIDADE: todo texto tem contraste mínimo de 4,5:1 (WCAG 2.1).   */
+/*   Ex.: texto azul-marinho no botão âmbar = 6,45:1.                     */
+/* Verde / vermelho aparecem só como sinal (em estoque, sem estoque).     */
+/* ===================================================================== */
+:root {
+  /* 60% - neutros (todos puxados para o azul, matiz 220°) */
+  --fundo:          #F4F6FA;
+  --superficie:     #FFFFFF;
+  --superficie-2:   #EEF2F7;
+  --borda:          #DDE3EC;
+  --texto:          #1A2233;  /* 15,9:1 no branco */
+  --texto-suave:    #5B6576;  /*  5,9:1 no branco */
+
+  /* 30% - azul (confiança) */
+  --topo:           #0F2A5F;  /* azul-marinho do cabeçalho      */
+  --primaria:       #1D4ED8;  /* botões comuns e links (6,7:1)  */
+  --primaria-hover: #1E40AF;
+  --primaria-clara: #DBEAFE;
+
+  /* 10% - âmbar (complementar do azul: ação / compra) */
+  --cta:            #F59E0B;
+  --cta-hover:      #FBBF24;
+  --cta-texto:      #0F2A5F;  /* 6,45:1 sobre o âmbar */
+
+  /* sinais */
+  --sucesso:        #15803D;
+  --alerta:         #B45309;
+  --erro:           #B91C1C;
+
+  --sombra:         0 1px 3px rgba(15, 42, 95, 0.08), 0 4px 12px rgba(15, 42, 95, 0.06);
+  --sombra-forte:   0 10px 24px rgba(15, 42, 95, 0.16);
+  --raio:           14px;
+}
+
+/* ========================= */
+/* RESET */
+/* ========================= */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding-top: 70px;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  overflow-x: hidden;
+}
+
+/* ========================= */
+/* TOPO */
+/* ========================= */
+.topo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 70px;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 20px;
+
+  border-bottom: 1px solid var(--topo);
+  background: var(--topo);
+  box-shadow: var(--sombra);
+
+  flex-wrap: wrap;
+}
+
+.logo {
+  color: #FFFFFF;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.menu-topo {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ========================= */
+/* BOTÕES */
+/* ========================= */
+.btn-topo,
+button {
+  background: var(--primaria);
+  border: none;
+  color: #FFFFFF;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s ease;
+}
+
+.btn-topo:hover,
+button:hover {
+  background: var(--primaria-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--sombra-forte);
+}
+
+button:disabled {
+  background: var(--borda) !important;
+  color: var(--texto-suave) !important;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Botões de COMPRA (Comprar, Adicionar, Finalizar): laranja para se destacar */
+.btn-comprar,
+.btn-finalizar {
+  background: var(--cta);
+  color: var(--cta-texto);
+}
+
+.btn-comprar:hover,
+.btn-finalizar:hover {
+  background: var(--cta-hover);
+}
+
+.btn-mini {
+  margin-left: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.btn-remover {
+  background: var(--erro);
+  color: #FFFFFF;
+}
+
+.btn-login {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.btn-criar-menor {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.btn-usuario {
+  min-width: 44px;
+}
+
+/* ========================= */
+/* PÁGINAS */
+/* ========================= */
+.pagina {
+  display: none;
+}
+
+.pagina-ativa {
+  display: block;
+}
+
+/* ========================= */
+/* GRID PRODUTOS */
+/* ========================= */
+.grid-produtos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  padding: 20px;
+  align-items: start;
+}
+
+/* ========================= */
+/* CARD */
+/* ========================= */
+.card {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 14px;
+  transition: 0.2s ease;
+
+  min-height: 420px;
+
+  display: flex;
+  flex-direction: column;
+
+  box-shadow: var(--sombra);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primaria);
+  box-shadow: var(--sombra-forte);
+}
+
+/* IMAGEM */
+.card img {
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #FFFFFF;
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+/* TEXTO */
+.card h3 {
+  color: var(--texto);
+  font-size: 18px;
+  margin: 8px 0 4px;
+  min-height: 44px;
+}
+
+.card p {
+  margin: 2px 0;
+  color: var(--texto-suave);
+}
+
+/* PREÇO */
+.card .preco,
+.preco {
+  color: var(--texto);
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: auto;
+}
+
+/* ========================= */
+/* LATERAIS */
+/* ========================= */
+.painel-lateral {
+  position: fixed;
+  top: 0;
+  width: 320px;
+  max-width: 100%;
+  height: 100vh;
+  background: var(--superficie);
+  color: var(--texto);
+  z-index: 9999;
+  padding: 24px 18px 18px;
+  box-shadow: var(--sombra-forte);
+  overflow-y: auto;
+  transition: all 0.35s ease;
+}
+
+.filtro {
+  left: -100%;
+  border-right: 1px solid var(--borda);
+}
+
+.filtro.ativo {
+  left: 0;
+}
+
+.carrinho {
+  right: -100%;
+  border-left: 1px solid var(--borda);
+}
+
+.carrinho.ativo {
+  right: 0;
+}
+
+.usuario-barra {
+  right: -100%;
+  border-left: 1px solid var(--borda);
+}
+
+.usuario-barra.ativo {
+  right: 0;
+}
+
+/* ========================= */
+/* OVERLAY */
+/* ========================= */
+#overlayLaterais {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 42, 95, 0.35);
+  display: none;
+  z-index: 9998;
+}
+
+#overlayLaterais.ativo {
+  display: block;
+}
+
+/* ========================= */
+/* FECHAR */
+/* ========================= */
+.btn-fechar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px !important;   /* não estica no celular (lá todo botão ocupa 100%) */
+  height: 36px;
+  padding: 0 !important;    /* sem o espaçamento dos outros botões */
+  border-radius: 50%;
+  background: var(--superficie-2);
+  color: var(--texto);
+  border: 1px solid var(--borda);
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 1;
+
+  /* deixa o X exatamente no centro do círculo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-fechar:hover {
+  background: var(--erro);
+  color: #FFFFFF;
+  transform: none;
+}
+
+/* ========================= */
+/* FILTRO */
+/* ========================= */
+.bloco-filtro {
+  margin-top: 20px;
+}
+
+.label-filtro {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--texto);
+  font-weight: bold;
+}
+
+/* ========================= */
+/* RANGE */
+/* ========================= */
+.range-wrapper label {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.range-wrapper input[type="range"] {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--primaria-clara);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.range-wrapper input[type="range"]::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 3px solid var(--primaria);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.range-wrapper input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 3px solid var(--primaria);
+  cursor: pointer;
+}
+
+.range-legenda {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: var(--texto-suave);
+}
+
+.range-duplo {
+  position: relative;
+  height: 30px;
+}
+
+.range-duplo input {
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+}
+
+.range-duplo input::-webkit-slider-thumb {
+  pointer-events: all;
+}
+
+/* ========================= */
+/* CARRINHO */
+/* ========================= */
+.carrinho-secao h3 {
+  color: var(--primaria);
+}
+
+.total-carrinho {
+  color: var(--texto);
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* ========================= */
+/* MONTE PC */
+/* ========================= */
+.botoes-fixos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px;
+}
+
+.botoes-fixos button {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.resumo-monte {
+  padding: 20px;
+}
+
+.controle-qtd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.qtd-badge {
+  min-width: 32px;
+  text-align: center;
+  color: var(--primaria);
+  font-weight: bold;
+}
+
+/* ========================= */
+/* TOAST */
+/* ========================= */
+.toast {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--topo);
+  color: #FFFFFF;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  display: none;
+  z-index: 10001;
+}
+
+.toast.ativo {
+  display: block;
+}
+
+/* ========================= */
+/* MSG */
+/* ========================= */
+.msg-centro,
+.confirm-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  color: var(--texto);
+
+  padding: 20px;
+  border-radius: 12px;
+
+  z-index: 99999;
+  text-align: center;
+
+  width: 90%;
+  max-width: 420px;
+
+  box-shadow: var(--sombra-forte);
+}
+
+.msg-centro {
+  display: none;
+}
+
+.msg-centro.ativo {
+  display: block;
+}
+
+/* ========================= */
+/* INPUTS */
+/* ========================= */
+.campo-login,
+.input-file {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+
+  background: #FFFFFF;
+  color: var(--texto);
+
+  outline: none;
+}
+
+.campo-login:focus,
+.input-file:hover {
+  border-color: var(--primaria);
+  box-shadow: 0 0 0 3px var(--primaria-clara);
+}
+
+/* ========================= */
+/* TABELAS */
+/* ========================= */
+.tabela-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tabela-estoque {
+  width: 100%;
+  min-width: 700px;
+
+  border-collapse: collapse;
+  margin-top: 10px;
+
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tabela-estoque thead {
+  background: var(--topo);
+  color: #FFFFFF;
+}
+
+.tabela-estoque th,
+.tabela-estoque td {
+  padding: 12px;
+  text-align: center;
+}
+
+.tabela-estoque tbody tr {
+  background: var(--superficie) !important;
+  border-bottom: 1px solid var(--borda) !important;
+  transition: 0.2s;
+}
+
+.tabela-estoque tbody tr:nth-child(even) {
+  background: var(--superficie-2) !important;
+}
+
+.tabela-estoque tbody tr:hover {
+  background: var(--primaria-clara) !important;
+  transform: scale(1.01);
+  cursor: pointer;
+}
+
+.tabela-estoque img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* ========================= */
+/* VENDAS */
+/* ========================= */
+.linha-venda {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.linha-venda.par {
+  background: var(--superficie);
+}
+
+.linha-venda.impar {
+  background: var(--superficie-2);
+}
+
+.linha-venda:hover {
+  background: var(--primaria-clara) !important;
+  transform: scale(1.01);
+}
+
+.detalhe-venda {
+  background: var(--fundo) !important;
+  padding: 12px !important;
+  border-radius: 10px !important;
+}
+
+/* ========================= */
+/* DASHBOARD */
+/* ========================= */
+.cards-dashboard {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.card-dashboard {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  padding: 20px;
+  border-radius: 14px;
+  min-width: 220px;
+  flex: 1;
+  box-shadow: var(--sombra);
+}
+
+.card-dashboard h3 {
+  margin-bottom: 10px;
+  color: var(--texto-suave);
+}
+
+.card-dashboard p {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+/* ========================= */
+/* ÁREA DOS GRÁFICOS */
+/* ========================= */
+
+/* container dos gráficos */
+.graficos-dashboard {
+  display: grid;
+
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(320px, 1fr)
+  );
+
+  gap: 22px;
+
+  margin-top: 25px;
+}
+
+/* card do gráfico */
+.grafico-box {
+  position: relative;
+
+  background: var(--superficie);
+
+  border: 1px solid var(--borda);
+
+  padding: 18px;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  box-shadow: var(--sombra);
+
+  transition: 0.25s ease;
+}
+
+/* linha brilhando em cima */
+.grafico-box::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 4px;
+
+  background: var(--primaria);
+}
+
+/* hover */
+.grafico-box:hover {
+  transform: translateY(-4px);
+
+  box-shadow: var(--sombra-forte);
+}
+
+/* título */
+.grafico-box h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+
+  color: var(--texto);
+
+  font-size: 18px;
+  font-weight: bold;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* canvas */
+.grafico-box canvas {
+  width: 100% !important;
+
+  height: 280px !important;
+
+  max-height: 280px;
+
+  display: block;
+}
+
+/* ========================= */
+/* CABEÇALHO */
+/* ========================= */
+.cabecalho-monte {
+  position: sticky;
+  top: 70px;
+  z-index: 900;
+
+  background: var(--fundo);
+
+  padding: 10px 15px;
+
+  border-bottom: 1px solid var(--borda);
+}
+
+/* ========================= */
+/* RESPONSIVO */
+/* ========================= */
+
+/* TABLET */
+@media (max-width: 1024px) {
+  .topo {
+    padding: 10px 14px;
+  }
+
+  .menu-topo {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .grid-produtos {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+/* CELULAR */
+@media (max-width: 700px) {
+  body {
+    padding-top: 120px;
+  }
+
+  .topo {
+    height: auto;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .logo {
+    width: 100%;
+    font-size: 24px;
+  }
+
+  .menu-topo {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-topo,
+  button {
+    width: 100%;
+  }
+
+  .grid-produtos {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .card {
+    min-height: auto;
+  }
+
+  .card img {
+    height: 160px;
+  }
+
+  .painel-lateral {
+    width: 100%;
+  }
+
+  .cards-dashboard {
+    flex-direction: column;
+  }
+
+  .card-dashboard {
+    width: 100%;
+  }
+
+  .botoes-fixos {
+    justify-content: center;
+  }
+
+  .cabecalho-monte {
+    top: 115px;
+  }
+
+  .controle-qtd {
+    flex-wrap: wrap;
+  }
+}
+
+/* CELULAR PEQUENO */
+@media (max-width: 480px) {
+  .logo {
+    font-size: 20px;
+  }
+
+  .card h3 {
+    font-size: 16px;
+  }
+
+  .btn-topo,
+  button {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .painel-lateral {
+    padding: 20px 14px;
+  }
+
+  .grafico-box {
+    padding: 12px;
+  }
+
+  .msg-centro,
+  .confirm-box {
+    width: 95%;
+  }
+}
+.graficos-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(450px,1fr));
+  gap:20px;
+  margin-top:20px;
+}
+
+.grafico-box{
+  background:var(--superficie);
+  border:1px solid var(--borda);
+  border-radius:16px;
+  padding:20px;
+  height:420px;
+}
+
+.grafico-box canvas{
+  width:100% !important;
+  height:320px !important;
+}
+/* ===================================================================== */
+/* ACABAMENTO DA LOJA                                                     */
+/* ===================================================================== */
+
+/* ---------- Cabeçalho ---------- */
+.logo {
+  letter-spacing: -0.5px;
+}
+
+.logo span {
+  color: var(--cta);            /* "Build" em âmbar: a marca usa as duas cores */
+}
+
+.topo .btn-topo {
+  background: transparent;      /* botões do menu discretos no fundo azul      */
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.topo .btn-topo:hover {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.topo #btnCarrinhoTopo {
+  background: var(--cta);       /* carrinho em destaque: é onde a venda fecha  */
+  color: var(--cta-texto);
+  border-color: var(--cta);
+}
+
+.topo #btnCarrinhoTopo:hover {
+  background: var(--cta-hover);
+}
+
+/* ---------- Vitrine (cards de produto) ---------- */
+.grid-produtos {
+  max-width: 1280px;
+  margin: 0 auto;
+  gap: 22px;
+  padding: 24px 20px;
+}
+
+.card {
+  border-radius: var(--raio);
+  padding: 16px;
+}
+
+.card img {
+  background: var(--superficie-2);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.card p {
+  font-size: 13px;
+}
+
+.card .preco {
+  color: var(--topo);
+  font-size: 24px;
+  letter-spacing: -0.5px;
+  margin-bottom: 2px;
+}
+
+.card button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+/* ---------- Botões de compra (âmbar) ---------- */
+.btn-comprar:hover,
+.btn-finalizar:hover {
+  color: var(--cta-texto);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+}
+
+/* ---------- Monte seu PC: categorias como "chips" ---------- */
+.botoes-fixos button {
+  background: var(--superficie);
+  color: var(--topo);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+.botoes-fixos button:hover {
+  background: var(--primaria-clara);
+  border-color: var(--primaria);
+  box-shadow: none;
+}
+
+.resumo-monte {
+  max-width: 1280px;
+  margin: 0 auto 30px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+/* ---------- Painéis laterais ---------- */
+.painel-lateral h2 {
+  margin-top: 4px;
+  font-size: 22px;
+}
+
+.carrinho-secao li,
+#listaMonte li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+/* ---------- Títulos ---------- */
+h2 {
+  color: var(--texto);
+  letter-spacing: -0.3px;
+}
+
+.cabecalho-monte h2 {
+  max-width: 1280px;
+  margin: 8px auto;
+}
+
+/* Monte seu PC: cabeçalho alinhado com a vitrine */
+.cabecalho-monte > * {
+  max-width: 1240px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.cabecalho-monte .botoes-fixos {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+/* Botões - e + de quantidade: pequenos e centralizados */
+.controle-qtd {
+  justify-content: center;
+}
+
+.card .controle-qtd button {
+  width: 44px;
+  margin-top: 0;
+  padding: 8px 0;
+  font-size: 18px;
+}
+
+/* Celular: menu do topo numa linha só (rola para o lado), sem cobrir a vitrine */
+@media (max-width: 700px) {
+  .topo {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .menu-topo {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
+
+  .topo .btn-topo {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .cabecalho-monte {
+    top: 104px;
+  }
+}

@@ -11,13 +11,13 @@
   <div id="overlayLaterais" onclick="fecharTodasLaterais()"></div>
 
   <header class="topo">
-    <div class="logo">TechBuild</div>
+    <div class="logo">Tech<span>Build</span></div>
 
     <nav class="menu-topo">
       <button class="btn-topo" onclick="pagina('hardware')">Hardware</button>
       <button class="btn-topo" onclick="pagina('monte')">Monte seu PC</button>
       <button class="btn-topo" onclick="toggleFiltro()">Filtro</button>
-      <button id="btnCarrinhoTopo" class="btn-topo" onclick="toggleCarrinho()">Carrinho</button>
+      <button id="btnCarrinhoTopo" class="btn-topo" onclick="toggleCarrinho()">🛒 Carrinho</button>
       <button class="btn-topo btn-usuario" onclick="toggleUsuario()">👤</button>
     </nav>
   </header>
@@ -65,7 +65,7 @@
     </div>
 
     <p id="totalCarrinho" class="total-carrinho">Total: R$ 0</p>
-    <button class="btn-login" onclick="finalizarCompra()">Finalizar compra</button>
+    <button class="btn-login btn-comprar" onclick="finalizarCompra()">Finalizar compra</button>
   </aside>
 
   <aside id="usuarioBarra" class="painel-lateral usuario-barra">
@@ -144,7 +144,7 @@
         <button onclick="filtrarTipoMonte('Gabinete')">Gabinete</button>
       </div>
 
-      <div class="barra-busca-estoque" style="background:#020617;padding:10px 0;margin-top:10px;">
+      <div class="barra-busca-estoque" style="background:var(--fundo);padding:10px 0;margin-top:10px;">
         <input 
           type="text" 
           id="buscaMonte" 
@@ -181,7 +181,7 @@
         <button onclick="mostrarSecaoPainel('dashboard')">Dashboard</button>
       </div>
 
-      <div class="barra-busca-estoque" style="background:#020617;padding:10px 0;margin-top:10px;">
+      <div class="barra-busca-estoque" style="background:var(--fundo);padding:10px 0;margin-top:10px;">
         <input 
           type="text" 
           id="buscaVendas" 
@@ -303,7 +303,78 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const API = "https://localhost:7011/api/Produtos";
+    // Endereço da API. Se o site for aberto pela própria API (Docker, nuvem ou
+    // https://localhost:7011), usa o mesmo endereço da página; se for aberto pelo
+    // Live Server do VS Code (porta 5500) ou direto do arquivo, usa a API local.
+    // (No PIM III a URL ficava fixa no código: esta era uma das limitações.)
+    const API_BASE = (location.protocol.startsWith("http") && location.port !== "5500")
+      ? location.origin
+      : "https://localhost:7011";
+    const API = API_BASE + "/api/Produtos";
+
+    // ─── Autenticação (JWT) ──────────────────────────────────────────────────────
+    // O token vem no login e fica dentro do objeto "usuario" salvo no localStorage.
+    function obterToken() {
+      if (usuarioLogado && usuarioLogado.token) return usuarioLogado.token;
+      try {
+        const u = JSON.parse(localStorage.getItem("usuario"));
+        return u && u.token ? u.token : null;
+      } catch { return null; }
+    }
+
+    // Igual ao fetch, mas envia o token (Authorization: Bearer ...) em toda requisição.
+    function apiFetch(url, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      const token = obterToken();
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      return fetch(url, { ...options, headers }).then(resp => {
+        // 401 com token = sessão expirada/inválida -> volta para o login
+        if (resp.status === 401 && token && !url.includes("/api/Usuarios/login")) {
+          logout();
+          setTimeout(() => msg("Sessão expirada. Faça login novamente."), 400);
+        }
+        return resp;
+      });
+    }
+
+    // Lê a mensagem de erro que a API devolveu (ex.: "Já existe um produto com esse nome")
+    async function mensagemErro(res, padrao) {
+      try {
+        const dados = await res.json();
+        if (dados.mensagem) return dados.mensagem;
+        if (dados.errors) return "Dados inválidos: " + Object.keys(dados.errors).join(", ");
+      } catch (e) { /* resposta sem JSON */ }
+      if (res.status === 401 || res.status === 403) return "Você precisa estar logado como administrador.";
+      return padrao + " (erro " + res.status + ")";
+    }
+
+    // Diminui a foto escolhida antes de enviar para a API: no máximo 600 px e em JPEG.
+    // Uma foto de celular/câmera pode ter 20 MB; sem isso o catálogo inteiro fica
+    // pesado demais e os produtos param de aparecer. Depois de reduzida fica com ~70 KB.
+    function lerImagemReduzida(arquivo, ladoMaximo = 600) {
+      return new Promise((resolve, reject) => {
+        const leitor = new FileReader();
+        leitor.onerror = reject;
+        leitor.onload = () => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            const escala = Math.min(1, ladoMaximo / Math.max(img.width, img.height));
+            const canvas = document.createElement("canvas");
+            canvas.width  = Math.round(img.width * escala);
+            canvas.height = Math.round(img.height * escala);
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#FFFFFF";                 // fundo branco (PNG transparente)
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          img.src = leitor.result;
+        };
+        leitor.readAsDataURL(arquivo);
+      });
+    }
 
     let produtos = [];
     let carrinho = [];
@@ -314,6 +385,10 @@
     let produtosEstoque = [];
     let produtoEditandoId = null;
     let vendasCache = [];
+    // Carrinho salvo no banco (ver "Carrinho salvo no banco" mais abaixo)
+    let assinaturaCarrinho = null;  // "foto" do último carrinho salvo/lido (para comparar)
+    let aplicandoCarrinho  = false; // true enquanto o site preenche o carrinho vindo da API
+    let timerSalvarCarrinho = null; // espera 0,4 s antes de salvar (junta cliques rápidos)
 
     // ─── Gráficos ────────────────────────────────────────────────────────────────
     let chartProdutos = null;
@@ -324,15 +399,15 @@
 
     // ─── Utilitários de status ───────────────────────────────────────────────────
     function corStatus(status) {
-      if (status === "Em Preparo")    return "#ffcc00";
-      if (status === "Em Transporte") return "#00aaff";
-      if (status === "Entregue")      return "#00ff88";
-      if (status === "Cancelada")     return "#ff4d4d";
-      if (status === "Devolvida")     return "#ff9900";
-      if (status === "Perda")         return "#cc0000";
-      if (status === "Concluida")     return "#00ff88"; // legado
-      if (status === "Parcial")       return "#ffaa00";
-      return "#ccc";
+      if (status === "Em Preparo")    return "#B45309";
+      if (status === "Em Transporte") return "#1D4ED8";
+      if (status === "Entregue")      return "#15803D";
+      if (status === "Cancelada")     return "#B91C1C";
+      if (status === "Devolvida")     return "#C2410C";
+      if (status === "Perda")         return "#7F1D1D";
+      if (status === "Concluida")     return "#15803D"; // legado
+      if (status === "Parcial")       return "#B45309";
+      return "#5B6576";
     }
 
     // Próximo status possível na sequência do admin
@@ -351,7 +426,7 @@
     // Avança status de UMA venda (admin)
     async function avancarStatusVenda(vendaId, compraId) {
       try {
-        const res  = await fetch(`https://localhost:7011/api/Vendas/avancar-status/${vendaId}`, { method: "PUT" });
+        const res  = await apiFetch(`${API_BASE}/api/Vendas/avancar-status/${vendaId}`, { method: "PUT" });
         const data = await res.json();
         if (!res.ok) { msg(data.mensagem || "Erro ao avançar status."); return; }
         msg("Status atualizado: " + data.status);
@@ -380,7 +455,7 @@
       const motivoTexto = motivo === "Outro" ? document.getElementById("motivoOutroTexto").value.trim() : "";
       if (motivo === "Outro" && !motivoTexto) { msg("Descreva o motivo."); return; }
       try {
-        const res  = await fetch(`https://localhost:7011/api/Vendas/devolver/${_devolverVendaId}`, {
+        const res  = await apiFetch(`${API_BASE}/api/Vendas/devolver/${_devolverVendaId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ motivo, motivoTexto })
@@ -482,7 +557,7 @@
     // ─── Vendas ──────────────────────────────────────────────────────────────────
     async function carregarVendas() {
       try {
-        const res   = await fetch("https://localhost:7011/api/Vendas");
+        const res   = await apiFetch(API_BASE + "/api/Vendas");
         const vendas = await res.json();
         vendasCache  = vendas;
 
@@ -588,7 +663,7 @@
     async function avancarStatusGrupo(compraId) {
       const itens = vendasCache.filter(v => v.compraId === compraId && proximoStatus(v.status));
       for (const item of itens) {
-        await fetch(`https://localhost:7011/api/Vendas/avancar-status/${item.id}`, { method: "PUT" });
+        await apiFetch(`${API_BASE}/api/Vendas/avancar-status/${item.id}`, { method: "PUT" });
       }
       msg("Status avançado com sucesso.");
       await carregarVendas();
@@ -661,6 +736,7 @@
       usuarioLogado = null;
       localStorage.removeItem("usuario");
       carrinho = []; carrinhoPC = []; monte = [];
+      assinaturaCarrinho = null; // o carrinho continua salvo no banco para o próximo login
       atualizarCarrinho();
       atualizarMonte();
       atualizarAreaUsuario();
@@ -695,16 +771,14 @@
 
       if (!nome || !email || !senha || !confirmarSenha) { msg("Preencha todos os campos."); return; }
       if (nome.length < 3)  { msg("O nome deve ter no mínimo 3 caracteres."); return; }
-      if (!email.endsWith("@gmail.com") && !email.endsWith("@hotmail.com")) {
-        msg("Email inválido. Use apenas @gmail.com ou @hotmail.com."); return;
-      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg("Email inválido."); return; }
       if (senha.length < 5) { msg("A senha deve ter no mínimo 5 caracteres."); return; }
       const senhaValida = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$/;
       if (!senhaValida.test(senha)) { msg("A senha só pode conter caracteres válidos."); return; }
       if (senha !== confirmarSenha) { msg("As senhas não coincidem."); return; }
 
       try {
-        const res  = await fetch("https://localhost:7011/api/Usuarios/criar-conta", {
+        const res  = await apiFetch(API_BASE + "/api/Usuarios/criar-conta", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nome, email, senha, confirmarSenha })
@@ -726,7 +800,7 @@
       if (!email || !senha) { msg("Preencha email e senha."); return; }
 
       try {
-        const res  = await fetch("https://localhost:7011/api/Usuarios/login", {
+        const res  = await apiFetch(API_BASE + "/api/Usuarios/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, senha })
@@ -736,6 +810,7 @@
         localStorage.setItem("usuario", JSON.stringify(data));
         usuarioLogado = data;
         atualizarVisibilidadeCarrinho();
+        carregarCarrinhoSalvo(); // traz o carrinho salvo desta conta
         msg("Login realizado com sucesso.");
         toggleUsuario();
       } catch (e) { msg("Erro ao fazer login."); console.error(e); }
@@ -749,19 +824,17 @@
       const confirmarSenha = document.getElementById("adminConfirmarSenha").value.trim();
 
       if (!email || !senha || !confirmarSenha) { msg("Preencha todos os campos."); return; }
-      if (!email.endsWith("@gmail.com") && !email.endsWith("@hotmail.com")) {
-        msg("Email inválido. Use apenas @gmail.com ou @hotmail.com."); return;
-      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg("Email inválido."); return; }
       if (senha.length < 5) { msg("A senha deve ter no mínimo 5 caracteres."); return; }
       const senhaValida = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$/;
       if (!senhaValida.test(senha)) { msg("A senha só pode conter letras, números e caracteres especiais permitidos."); return; }
       if (senha !== confirmarSenha) { msg("As senhas não coincidem."); return; }
 
       try {
-        const res  = await fetch("https://localhost:7011/api/Usuarios/criar-admin", {
+        const res  = await apiFetch(API_BASE + "/api/Usuarios/criar-admin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ adminId: usuarioLogado.id, email, senha, confirmarSenha })
+          body: JSON.stringify({ email, senha, confirmarSenha })
         });
         const data = await res.json();
         if (!res.ok) { msg(data.mensagem || "Não foi possível criar o administrador."); return; }
@@ -775,7 +848,7 @@
     // ─── Produtos / Hardware ─────────────────────────────────────────────────────
     async function carregar() {
       try {
-        const res = await fetch(API);
+        const res = await apiFetch(API);
         if (!res.ok) throw new Error("Falha ao carregar produtos.");
         produtos = await res.json();
         mostrarHardware(produtos);
@@ -822,6 +895,14 @@
       return p.imagemUrl;
     }
 
+    // Texto da quantidade em estoque mostrado no card do produto (Hardware e Monte seu PC)
+    function textoEstoque(p) {
+      const q = Number(p.quantidade) || 0;
+      if (q <= 0) return `<p class="estoque-info" style="color:var(--erro);font-weight:bold;font-size:13px;margin:4px 0;">Sem estoque</p>`;
+      if (q <= 2) return `<p class="estoque-info" style="color:var(--alerta);font-weight:bold;font-size:13px;margin:4px 0;">Últimas ${q} unidade${q > 1 ? "s" : ""} em estoque</p>`;
+      return `<p class="estoque-info" style="color:var(--sucesso);font-size:13px;margin:4px 0;">${q} unidades em estoque</p>`;
+    }
+
     function mostrarHardware(lista) {
       const div = document.getElementById("produtos");
       div.innerHTML = "";
@@ -833,9 +914,10 @@
             <h3>${p.nome}</h3>
             <p>${nomeTipoExibicao(p.tipo)}</p>
             <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+            ${textoEstoque(p)}
             ${semEstoque
               ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
-              : `<button onclick='addCarrinho(${JSON.stringify(p)})'>Comprar</button>`}
+              : `<button class="btn-comprar" onclick='addCarrinho(${JSON.stringify(p)})'>Comprar</button>`}
           </div>
         `;
       });
@@ -873,10 +955,24 @@
       });
 
       total.innerText = "Total: R$ " + formatarPreco(soma);
+      salvarCarrinho(); // grava no banco (mesmo carrinho no site e no app)
     }
 
-    function removerCarrinho(index)   { carrinho.splice(index, 1);   atualizarCarrinho(); toast("Item removido do carrinho."); }
-    function removerCarrinhoPC(index) { carrinhoPC.splice(index, 1); atualizarCarrinho(); toast("Item removido do carrinho."); }
+    function removerCarrinho(index) {
+      carrinho.splice(index, 1);
+      atualizarCarrinho();
+      const max = Number(document.getElementById("rangeMax").value);
+      mostrarHardware(produtos.filter(p => Number(p.preco) <= max));
+      toast("Item removido do carrinho.");
+    }
+
+    function removerCarrinhoPC(index) {
+      carrinhoPC.splice(index, 1);
+      atualizarCarrinho();
+      const max = Number(document.getElementById("rangeMax").value);
+      mostrarHardware(produtos.filter(p => Number(p.preco) <= max));
+      toast("Item removido do carrinho.");
+    }
 
     // ─── Monte seu PC ────────────────────────────────────────────────────────────
     function filtrarTipoMonte(tipo) {
@@ -936,6 +1032,7 @@
               <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
               <h3>${p.nome}</h3><p>${nomeTipo}</p>
               <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+            ${textoEstoque(p)}
               ${semEstoque && qtd === 0
                 ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
                 : `<div class="controle-qtd">
@@ -951,11 +1048,12 @@
               <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
               <h3>${p.nome}</h3><p>${nomeTipo}</p>
               <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+            ${textoEstoque(p)}
               ${jaSelecionado
                 ? `<button class="btn-remover" onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Remover</button>`
                 : semEstoque
                   ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
-                  : `<button onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Adicionar</button>`}
+                  : `<button class="btn-comprar" onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Adicionar</button>`}
             </div>`;
         }
       });
@@ -1101,7 +1199,7 @@
       const todosItens = [...agruparItensCompra(carrinho, "Carrinho"), ...agruparItensCompra(carrinhoPC, "MontePC")];
       if (!todosItens.length) { msg("Seu carrinho está vazio."); return; }
       try {
-        const res  = await fetch("https://localhost:7011/api/Compras/finalizar", {
+        const res  = await apiFetch(API_BASE + "/api/Compras/finalizar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ usuarioId: usuario.id, itens: todosItens })
@@ -1117,7 +1215,7 @@
     async function mostrarMinhasCompras() {
       if (!usuarioLogado) { msg("Faça login para ver suas compras."); return; }
       try {
-        const res    = await fetch(`https://localhost:7011/api/Compras/usuario/${usuarioLogado.id}`);
+        const res    = await apiFetch(`${API_BASE}/api/Compras/usuario/${usuarioLogado.id}`);
         const compras = await res.json();
         document.getElementById("usuarioLogadoArea").style.display  = "none";
         document.getElementById("loginArea").style.display          = "none";
@@ -1127,7 +1225,7 @@
         lista.innerHTML = "";
 
         // Busca também as vendas do usuário para ter status individual
-        const resV = await fetch(`https://localhost:7011/api/Vendas`);
+        const resV = await apiFetch(`${API_BASE}/api/Vendas`);
         const todasVendas = await resV.json();
         const vendasUsuario = todasVendas.filter(v => v.usuarioNome === (usuarioLogado.nome || "Usuário") || true);
         // Filtra por usuário via compraId
@@ -1175,7 +1273,7 @@
           }).join("");
 
           lista.innerHTML += `
-            <div class="bloco-compra" style="background:#03101f;border:1px solid #00e5ff33;border-radius:12px;padding:14px;margin-bottom:14px;">
+            <div class="bloco-compra" style="background:var(--superficie);border:1px solid var(--borda);border-radius:12px;padding:14px;margin-bottom:14px;">
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
                 <button onclick="toggleItensCompra(${compra.id})">${idFormatado}</button>
                 <span style="color:${corStatus(statusExibir)};font-weight:bold;">${statusExibir}</span>
@@ -1195,7 +1293,7 @@
     async function cancelarCompra(id) {
       confirmar("Tem certeza que deseja cancelar essa compra?", async () => {
         try {
-          const res  = await fetch(`https://localhost:7011/api/Compras/cancelar/${id}`, { method: "PUT" });
+          const res  = await apiFetch(`${API_BASE}/api/Compras/cancelar/${id}`, { method: "PUT" });
           const data = await res.json();
           if (!res.ok) { msg(data.mensagem || "Não foi possível cancelar a compra."); return; }
           msg("Compra cancelada com sucesso.");
@@ -1222,7 +1320,7 @@
     // ─── Estoque ─────────────────────────────────────────────────────────────────
     async function carregarEstoque() {
       try {
-        const res = await fetch("https://localhost:7011/api/Produtos");
+        const res = await apiFetch(API_BASE + "/api/Produtos");
         if (!res.ok) { console.error("Erro HTTP:", res.status); return; }
         produtosEstoque = await res.json();
         renderEstoque(produtosEstoque);
@@ -1252,7 +1350,7 @@
       let html = "";
       Object.keys(grupos).forEach(tipo => {
         html += `
-          <h3 style="margin-top:20px;color:#00e5ff;">${tipo}</h3>
+          <h3 style="margin-top:20px;color:var(--primaria);">${tipo}</h3>
           <table class="tabela-estoque">
             <thead><tr><th>ID</th><th>Nome</th><th>Preço</th><th>Consumo</th><th>Socket</th><th>Qtd</th><th>Imagem</th><th>Potência</th></tr></thead>
             <tbody>`;
@@ -1291,7 +1389,7 @@
       let imagemBase64 = produtoOriginal.imagemUrl || null;
       if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        imagemBase64 = await new Promise(resolve => { const r = new FileReader(); r.onload = () => resolve(r.result); r.readAsDataURL(file); });
+        imagemBase64 = await lerImagemReduzida(file); // diminui a foto antes de enviar
       }
       const produto = {
         id,
@@ -1305,10 +1403,10 @@
         potencia:       produtoOriginal.potencia || null
       };
       try {
-        const res = await fetch(`https://localhost:7011/api/Produtos/${id}`, {
+        const res = await apiFetch(`${API_BASE}/api/Produtos/${id}`, {
           method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(produto)
         });
-        if (!res.ok) { msg("Erro ao salvar."); return; }
+        if (!res.ok) { msg(await mensagemErro(res, "Erro ao salvar.")); return; }
         produtoEditandoId = null;
         msg("Produto atualizado.");
         carregarEstoque();
@@ -1317,7 +1415,7 @@
 
     function excluirProduto(id) {
       confirmar("Tem certeza que deseja excluir?", async () => {
-        await fetch(`${API}/${id}`, { method: "DELETE" });
+        await apiFetch(`${API}/${id}`, { method: "DELETE" });
         msg("Produto excluído");
         await carregar();
         await carregarEstoque();
@@ -1332,7 +1430,7 @@
       let imagemBase64 = null;
       if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        imagemBase64 = await new Promise(resolve => { const r = new FileReader(); r.onload = () => resolve(r.result); r.readAsDataURL(file); });
+        imagemBase64 = await lerImagemReduzida(file); // diminui a foto antes de enviar
       }
       const produto = {
         nome,
@@ -1345,8 +1443,8 @@
         potencia:       Number(document.getElementById("novoPotencia").value) || null
       };
       try {
-        const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(produto) });
-        if (!res.ok) { msg("Erro ao criar produto."); return; }
+        const res = await apiFetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(produto) });
+        if (!res.ok) { msg(await mensagemErro(res, "Erro ao criar produto.")); return; }
         msg("Produto criado!");
         await carregar();
         await carregarEstoque();
@@ -1402,20 +1500,154 @@
 
     // ─── Init ────────────────────────────────────────────────────────────────────
     const usuarioSalvo = JSON.parse(localStorage.getItem("usuario"));
-    if (usuarioSalvo) usuarioLogado = usuarioSalvo;
+    if (usuarioSalvo && !usuarioSalvo.token) { localStorage.removeItem("usuario"); } // sessão antiga, sem token
+    if (usuarioSalvo && usuarioSalvo.token) usuarioLogado = usuarioSalvo;
     atualizarAreaUsuario();
     atualizarVisibilidadeCarrinho();
-    carregar();
+    carregar().then(carregarCarrinhoSalvo); // depois dos produtos, traz o carrinho salvo
+
+    // ─── Atualização em tempo real (sem precisar apertar F5) ───────────────────
+    // A cada 3 segundos o site pergunta à API a "versão" do catálogo
+    // (GET /api/Produtos/versao). Esse número vem do banco e muda sempre que
+    // um produto é criado, alterado, excluído ou tem o estoque alterado
+    // (trigger de auditoria + procedure sp_VersaoCatalogo).
+    // Só quando a versão muda o site baixa os produtos de novo e redesenha
+    // as telas de Hardware, Monte seu PC, Carrinho e Estoque.
+    let versaoCatalogo = null;
+
+    async function verificarAtualizacoes() {
+      carregarCarrinhoSalvo(); // o carrinho pode ter mudado em outro aparelho
+      try {
+        const res = await fetch(API + "/versao");
+        if (!res.ok) return;
+        const dados = await res.json();
+        if (versaoCatalogo === null) { versaoCatalogo = dados.versao; return; } // primeira leitura
+        if (dados.versao === versaoCatalogo) return;                             // nada mudou
+        versaoCatalogo = dados.versao;
+        await atualizarTelasProdutos();
+      } catch (e) { /* sem conexão: tenta de novo na próxima rodada */ }
+    }
+
+    // Troca um produto guardado (no carrinho ou no PC montado) pela versão nova dele
+    function produtoAtualizado(p) {
+      return produtos.find(x => x.id === p.id) || p;
+    }
+
+    async function atualizarTelasProdutos() {
+      const res = await apiFetch(API);
+      if (!res.ok) return;
+      produtos = await res.json();
+
+      // Hardware e Monte seu PC: reaplica o filtro de preço/busca que já estava na tela
+      let min = Number(rangeMin.value), max = Number(rangeMax.value);
+      if (min > max) [min, max] = [max, min];
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+      const filtrados = produtos.filter(p =>
+        Number(p.preco) >= min && Number(p.preco) <= max &&
+        (!termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca)))
+      );
+      mostrarHardware(filtrados);
+      mostrarMonte(tipoAtualMonte ? filtrados.filter(p => tipoEquivalente(p.tipo) === tipoAtualMonte) : filtrados);
+
+      // Carrinho e PC montado: atualiza nome e preço dos itens já escolhidos
+      carrinho   = carrinho.map(produtoAtualizado);
+      carrinhoPC = carrinhoPC.map(produtoAtualizado);
+      monte      = monte.map(produtoAtualizado);
+      atualizarCarrinho();
+      atualizarMonte();
+
+      // Estoque (painel do admin): só redesenha se ninguém estiver editando um produto
+      if (isAdminLogin() && produtoEditandoId === null) {
+        produtosEstoque = produtos;
+        filtrarEstoque();
+      }
+    }
+
+    // ─── Carrinho salvo no banco (o mesmo carrinho no site e no app) ───────────
+    // Toda vez que o carrinho muda, o site manda ele para a API (PUT /api/Carrinho),
+    // que grava na tabela CarrinhoItens (procedure sp_SalvarCarrinho).
+    // Ao abrir o site ou fazer login, o site busca o carrinho salvo (GET /api/Carrinho).
+    // A cada 3 segundos ele também confere se o carrinho mudou em outro aparelho.
+    const URL_CARRINHO = API_BASE + "/api/Carrinho";
+    // (variáveis assinaturaCarrinho, aplicandoCarrinho e timerSalvarCarrinho: declaradas no topo do script)
+
+    // Converte o carrinho do site (um item por unidade) no formato do banco
+    function carrinhoParaServidor() {
+      const itens = [];
+      [[carrinho, "Carrinho"], [carrinhoPC, "MontePC"]].forEach(([lista, origem]) => {
+        const qtd = {};
+        lista.forEach(p => { qtd[p.id] = (qtd[p.id] || 0) + 1; });
+        Object.keys(qtd).forEach(id => itens.push({ produtoId: Number(id), quantidade: qtd[id], origem }));
+      });
+      return itens;
+    }
+
+    function assinatura(itens) {
+      return JSON.stringify(itens
+        .map(i => ({ produtoId: i.produtoId, quantidade: i.quantidade, origem: i.origem }))
+        .sort((a, b) => (a.origem + a.produtoId).localeCompare(b.origem + b.produtoId)));
+    }
+
+    // Preenche o carrinho da tela com o que veio do banco
+    function aplicarCarrinhoDoServidor(itens) {
+      aplicandoCarrinho = true;
+      carrinho = []; carrinhoPC = [];
+      itens.forEach(i => {
+        const p = produtos.find(x => x.id === i.produtoId);
+        if (!p) return;
+        const destino = i.origem === "MontePC" ? carrinhoPC : carrinho;
+        for (let k = 0; k < i.quantidade; k++) destino.push(p);
+      });
+      atualizarCarrinho();
+      aplicandoCarrinho = false;
+      assinaturaCarrinho = assinatura(itens);
+    }
+
+    async function carregarCarrinhoSalvo() {
+      if (!usuarioLogado || !produtos.length) return;
+      try {
+        const res = await apiFetch(URL_CARRINHO);
+        if (!res.ok) return;
+        const itens = await res.json();
+        if (timerSalvarCarrinho) return; // há uma alteração deste site esperando para ser salva
+        if (assinatura(itens) !== assinaturaCarrinho) aplicarCarrinhoDoServidor(itens);
+      } catch (e) { /* sem conexão: tenta de novo depois */ }
+    }
+
+    function salvarCarrinho() {
+      if (!usuarioLogado || aplicandoCarrinho) return;
+      clearTimeout(timerSalvarCarrinho);
+      timerSalvarCarrinho = setTimeout(async () => {
+        const itens = carrinhoParaServidor();
+        try {
+          const res = await apiFetch(URL_CARRINHO, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ itens })
+          });
+          if (res.ok) {
+            const salvo = await res.json();
+            // o banco limita a quantidade ao estoque: se ajustou, mostra como ficou
+            if (assinatura(salvo) !== assinatura(itens)) aplicarCarrinhoDoServidor(salvo);
+            else assinaturaCarrinho = assinatura(salvo);
+          }
+        } catch (e) { /* sem conexão */ }
+        timerSalvarCarrinho = null;
+      }, 400);
+    }
+
+    setInterval(verificarAtualizacoes, 3000);
+    verificarAtualizacoes();
 
     // ─── Dashboard (VERSÃO CORRIGIDA) ────────────────────────────────────────────
-    Chart.defaults.color       = "#ffffff";
-    Chart.defaults.borderColor = "rgba(255,255,255,0.08)";
+    Chart.defaults.color       = "#1A2233";
+    Chart.defaults.borderColor = "rgba(15,42,95,0.10)";
     Chart.defaults.responsive  = true;
     Chart.defaults.maintainAspectRatio = false;
 
     async function carregarDashboard() {
       try {
-        const res   = await fetch("https://localhost:7011/api/Vendas");
+        const res   = await apiFetch(API_BASE + "/api/Vendas");
         const vendas = await res.json();
 
         const produtosMap = {};
@@ -1515,12 +1747,12 @@
         maintainAspectRatio: false,
         animation: { duration: 800, easing: "easeOutQuart" },
         plugins: {
-          legend: { labels: { color: "#fff", font: { size: 12 }, padding: 16 } },
+          legend: { labels: { color: "#1A2233", font: { size: 12 }, padding: 16 } },
           tooltip: {
-            backgroundColor: "rgba(2,6,23,0.92)",
-            borderColor: "rgba(0,191,255,0.3)",
+            backgroundColor: "rgba(15,42,95,0.95)",
+            borderColor: "rgba(29,78,216,0.4)",
             borderWidth: 1,
-            titleColor: "#00bfff",
+            titleColor: "#FFFFFF",
             bodyColor: "#e2e8f0",
             padding: 12,
             cornerRadius: 8,
@@ -1529,17 +1761,17 @@
         },
         scales: {
           x: {
-            ticks: { color: "#94a3b8", font: { size: 11 } },
-            grid:  { color: "rgba(255,255,255,0.06)" }
+            ticks: { color: "#5B6576", font: { size: 11 } },
+            grid:  { color: "rgba(15,42,95,0.08)" }
           },
           y: {
             beginAtZero: true,
             ticks: {
-              color: "#94a3b8",
+              color: "#5B6576",
               font: { size: 11 },
               callback: v => "R$ " + Number(v).toLocaleString("pt-BR")
             },
-            grid: { color: "rgba(255,255,255,0.06)" }
+            grid: { color: "rgba(15,42,95,0.08)" }
           }
         }
       };
@@ -1552,12 +1784,19 @@
     function criarGraficoProdutos(dados) {
       destruirGrafico(chartProdutos);
       const canvas  = document.getElementById("graficoProdutos");
-      const entradas = Object.entries(dados).sort((a, b) => b[1] - a[1]);
+      // Mostra só os 8 mais vendidos: com todos os produtos as barras ficavam
+      // amontoadas e os nomes um em cima do outro.
+      const TOP = 8;
+      const entradas = Object.entries(dados)
+        .filter(e => e[1] > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, TOP);
       const opts    = baseOpts(tooltipQtd);
       opts.scales.x.ticks.callback = v => v;
       opts.scales.y.ticks.display  = false;
       opts.scales.y.beginAtZero    = undefined;
       opts.layout = { padding: { left: 160, right: 52 } };
+      opts.plugins = { ...opts.plugins, legend: { display: false } }; // o título já explica o gráfico
 
       const labelPlugin = {
         id: "produtoLabels",
@@ -1572,12 +1811,12 @@
             const xFim  = x.getPixelForValue(valor);
             ctx.textAlign    = "right";
             ctx.textBaseline = "middle";
-            ctx.fillStyle    = "#cbd5e1";
+            ctx.fillStyle    = "#5B6576";
             ctx.font         = "12px Arial";
             const nomeExibir = nome.length > 22 ? nome.substring(0, 21) + "…" : nome;
             ctx.fillText(nomeExibir, x.left - 8, yPos);
             ctx.textAlign    = "left";
-            ctx.fillStyle    = "#7df9ff";
+            ctx.fillStyle    = "#1D4ED8";
             ctx.font         = "bold 12px Arial";
             ctx.fillText(valor + " un.", xFim + 6, yPos);
           });
@@ -1592,11 +1831,13 @@
           datasets: [{
             label: "Quantidade vendida",
             data: entradas.map(e => e[1]),
-            backgroundColor: "rgba(0,191,255,0.75)",
-            borderColor: "#00bfff",
+            backgroundColor: "rgba(29,78,216,0.8)",
+            borderColor: "#1D4ED8",
             borderWidth: 0,
             borderRadius: 6,
-            borderSkipped: false
+            borderSkipped: false,
+            barThickness: 22,          // barras com altura fixa e espaço entre elas
+            maxBarThickness: 26
           }]
         },
         options: { ...opts, indexAxis: "y" },
@@ -1611,12 +1852,12 @@
       const ctx    = canvas.getContext("2d");
 
       const gradVerde    = ctx.createLinearGradient(0, 0, 0, 300);
-      gradVerde.addColorStop(0, "rgba(0,255,136,0.35)");
-      gradVerde.addColorStop(1, "rgba(0,255,136,0)");
+      gradVerde.addColorStop(0, "rgba(21,128,61,0.35)");
+      gradVerde.addColorStop(1, "rgba(21,128,61,0)");
 
       const gradVermelho = ctx.createLinearGradient(0, 0, 0, 300);
-      gradVermelho.addColorStop(0, "rgba(255,77,77,0.35)");
-      gradVermelho.addColorStop(1, "rgba(255,77,77,0)");
+      gradVermelho.addColorStop(0, "rgba(185,28,28,0.35)");
+      gradVermelho.addColorStop(1, "rgba(185,28,28,0)");
 
       chartDia = new Chart(canvas, {
         type: "line",
@@ -1626,10 +1867,10 @@
             {
               label: "Lucro diário",
               data: Object.values(dados),
-              borderColor: "#00ff88",
+              borderColor: "#15803D",
               backgroundColor: gradVerde,
               borderWidth: 2.5,
-              pointBackgroundColor: "#00ff88",
+              pointBackgroundColor: "#15803D",
               pointRadius: 4,
               pointHoverRadius: 7,
               fill: true,
@@ -1638,10 +1879,10 @@
             {
               label: "Perdas",
               data: Object.values(perdas),
-              borderColor: "#ff4d4d",
+              borderColor: "#B91C1C",
               backgroundColor: gradVermelho,
               borderWidth: 2.5,
-              pointBackgroundColor: "#ff4d4d",
+              pointBackgroundColor: "#B91C1C",
               pointRadius: 4,
               pointHoverRadius: 7,
               fill: true,
@@ -1664,8 +1905,8 @@
             {
               label: "Lucro mensal",
               data: Object.values(dados),
-              backgroundColor: "rgba(0,191,255,0.8)",
-              borderColor: "#00bfff",
+              backgroundColor: "rgba(29,78,216,0.8)",
+              borderColor: "#1D4ED8",
               borderWidth: 0,
               borderRadius: 6,
               borderSkipped: false,
@@ -1675,8 +1916,8 @@
             {
               label: "Perdas",
               data: Object.values(perdas),
-              backgroundColor: "rgba(255,77,77,0.8)",
-              borderColor: "#ff4d4d",
+              backgroundColor: "rgba(185,28,28,0.8)",
+              borderColor: "#B91C1C",
               borderWidth: 0,
               borderRadius: 6,
               borderSkipped: false,
@@ -1696,12 +1937,12 @@
       const ctx    = canvas.getContext("2d");
 
       const gradAnual = ctx.createLinearGradient(0, 0, 0, 300);
-      gradAnual.addColorStop(0, "rgba(0,255,136,0.9)");
-      gradAnual.addColorStop(1, "rgba(0,255,136,0.2)");
+      gradAnual.addColorStop(0, "rgba(21,128,61,0.9)");
+      gradAnual.addColorStop(1, "rgba(21,128,61,0.2)");
 
       const gradPerda = ctx.createLinearGradient(0, 0, 0, 300);
-      gradPerda.addColorStop(0, "rgba(255,77,77,0.9)");
-      gradPerda.addColorStop(1, "rgba(255,77,77,0.2)");
+      gradPerda.addColorStop(0, "rgba(185,28,28,0.9)");
+      gradPerda.addColorStop(1, "rgba(185,28,28,0.2)");
 
       chartAno = new Chart(canvas, {
         type: "bar",
@@ -1712,7 +1953,7 @@
               label: "Lucro anual",
               data: Object.values(dados),
               backgroundColor: gradAnual,
-              borderColor: "#00ff88",
+              borderColor: "#15803D",
               borderWidth: 2,
               borderRadius: 8,
               borderSkipped: false,
@@ -1723,7 +1964,7 @@
               label: "Perdas",
               data: Object.values(perdas),
               backgroundColor: gradPerda,
-              borderColor: "#ff4d4d",
+              borderColor: "#B91C1C",
               borderWidth: 2,
               borderRadius: 8,
               borderSkipped: false,
@@ -1745,12 +1986,12 @@
           datasets: [{
             data: [vendas, devolucoes, cancelamentos, perdas],
             backgroundColor: [
-              "rgba(0,255,136,0.8)",
-              "rgba(255,153,0,0.8)",
-              "rgba(60,0,80,0.95)",
-              "rgba(180,0,0,0.85)"
+              "rgba(21,128,61,0.8)",
+              "rgba(194,65,12,0.8)",
+              "rgba(91,101,118,0.9)",
+              "rgba(127,29,29,0.85)"
             ],
-            borderColor: ["#00ff88","#ff9900","#3c0050","#cc0000"],
+            borderColor: ["#15803D","#C2410C","#5B6576","#7F1D1D"],
             borderWidth: 2,
             hoverOffset: 12
           }]
@@ -1760,12 +2001,12 @@
           maintainAspectRatio: false,
           animation: { duration: 800 },
           plugins: {
-            legend: { labels: { color: "#fff", font: { size: 12 }, padding: 14 }, position: "bottom" },
+            legend: { labels: { color: "#1A2233", font: { size: 12 }, padding: 14 }, position: "bottom" },
             tooltip: {
-              backgroundColor: "rgba(2,6,23,0.92)",
-              borderColor: "rgba(0,191,255,0.3)",
+              backgroundColor: "rgba(15,42,95,0.95)",
+              borderColor: "rgba(29,78,216,0.4)",
               borderWidth: 1,
-              titleColor: "#00bfff",
+              titleColor: "#FFFFFF",
               bodyColor: "#e2e8f0",
               callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` }
             }
@@ -1777,8 +2018,8 @@
 
   <!-- Modal devolução -->
   <div id="modalDevolucao" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99998;align-items:center;justify-content:center;">
-    <div style="background:#03101f;border:1px solid #00e5ff;border-radius:14px;padding:24px;width:90%;max-width:400px;">
-      <h3 style="color:#00e5ff;margin-top:0;">Motivo da devolução</h3>
+    <div style="background:var(--superficie);color:var(--texto);border:1px solid var(--borda);border-radius:14px;padding:24px;width:90%;max-width:400px;">
+      <h3 style="color:var(--primaria);margin-top:0;">Motivo da devolução</h3>
       <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <input type="radio" name="motivoDev" value="Desistencia"> Desistência
       </label>

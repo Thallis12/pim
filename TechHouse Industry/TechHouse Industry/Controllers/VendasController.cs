@@ -1,160 +1,95 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TechBuildAPI.Data;
-using Microsoft.EntityFrameworkCore;
-using TechBuildAPI.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TechBuildAPI.Services;
 
 namespace TechBuildAPI.Controllers
 {
+    // CAMADA DE APRESENTAÇÃO (API) - VENDAS (cada item de uma compra)
+    // Controller -> PedidoService -> PedidoRepository -> procedures do banco
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class VendasController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly PedidoService _pedidos;
 
-        public VendasController(AppDbContext context)
+        public VendasController(PedidoService pedidos)
         {
-            _context = context;
+            _pedidos = pedidos;
         }
 
-        // DTO para devolução
         public class DevolverDto
         {
-            public string Motivo { get; set; } = ""; // "Defeito" | "Desistencia" | "Outro"
+            public string Motivo { get; set; } = "";  // "Defeito" | "Desistencia" | "Outro"
             public string? MotivoTexto { get; set; }  // preenchido quando Motivo == "Outro"
         }
 
-        // GET - LISTAR VENDAS
+        // GET - admin enxerga todas; cliente enxerga apenas as próprias
         [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            var vendas = await _context.Vendas
-                .Include(v => v.Usuario)
-                .Include(v => v.Compra)
-                .OrderByDescending(v => v.Id)
-                .Select(v => new
-                {
-                    v.Id,
-                    v.Preco,
-                    v.Quantidade,
-                    v.Status,
-                    Data = v.Compra != null ? v.Compra.DataCompra : v.Data,
-                    v.ProdutoNome,
-                    v.ProdutoTipo,
-                    v.Origem,
-                    UsuarioNome = (v.Usuario != null && !string.IsNullOrEmpty(v.Usuario.Nome))
-                        ? v.Usuario.Nome
-                        : "Usuário",
-                    v.CompraId,
-                    v.MotivoDevolicao
-                })
-                .ToListAsync();
+        public async Task<IActionResult> Get() =>
+            Ok(await _pedidos.ListarVendas(User.ObterUsuarioId(), User.EhAdmin()));
 
-            return Ok(vendas);
-        }
-
-        // POST - CRIAR VENDA
+        // POST - criar venda manual (apenas admin; o fluxo normal usa /api/Compras/finalizar)
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Criar([FromBody] Vendas venda)
         {
-            if (venda == null)
-                return BadRequest("Dados inválidos.");
-
-            if (venda.UsuarioId == 0)
-                return BadRequest("Usuário inválido.");
-
-            if (string.IsNullOrWhiteSpace(venda.ProdutoNome))
-                return BadRequest("Produto inválido.");
-
-            var brasil = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-            venda.Data = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brasil);
-            venda.Status = "Em Preparo";
-
-            if (string.IsNullOrEmpty(venda.Origem))
-                venda.Origem = "Carrinho";
-
-            _context.Vendas.Add(venda);
-            await _context.SaveChangesAsync();
-
-            return Ok(venda);
+            try
+            {
+                return Ok(await _pedidos.CriarVendaManual(venda));
+            }
+            catch (RegraDeNegocioException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
 
-        // PUT - AVANÇAR STATUS (apenas admin)
-        // Sequência: Em Preparo → Em Transporte → Entregue
-        [HttpPut("avancar-status/{id}")]
+        // PUT - avançar status (admin) -> procedure dbo.sp_AvancarStatusVenda
+        [Authorize(Roles = "Admin")]
+        [HttpPut("avancar-status/{id:int}")]
         public async Task<IActionResult> AvancarStatus(int id)
         {
-            var venda = await _context.Vendas.FindAsync(id);
-            if (venda == null)
-                return NotFound("Venda não encontrada.");
-
-            venda.Status = venda.Status switch
+            try
             {
-                "Em Preparo" => "Em Transporte",
-                "Em Transporte" => "Entregue",
-                _ => venda.Status
-            };
-
-            await _context.SaveChangesAsync();
-            return Ok(new { mensagem = "Status atualizado.", status = venda.Status });
+                var status = await _pedidos.AvancarStatus(id);
+                return Ok(new { mensagem = "Status atualizado.", status });
+            }
+            catch (RegraDeNegocioException ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
 
-        // PUT - CANCELAR VENDA (cliente — só até "Em Preparo")
-        [HttpPut("cancelar/{id}")]
+        // PUT - cancelar item -> procedure dbo.sp_CancelarVenda
+        [HttpPut("cancelar/{id:int}")]
         public async Task<IActionResult> Cancelar(int id)
         {
-            var venda = await _context.Vendas.FindAsync(id);
-            if (venda == null)
-                return NotFound("Venda não encontrada.");
-
-            if (venda.Status != "Em Preparo")
-                return BadRequest(new { mensagem = "Não é possível cancelar: pedido já foi enviado." });
-
-            venda.Status = "Cancelada";
-
-            // Devolve ao estoque
-            var produto = await _context.Produtos
-                .FirstOrDefaultAsync(p => p.Nome.ToLower() == venda.ProdutoNome.ToLower());
-            if (produto != null)
-                produto.Quantidade += venda.Quantidade;
-
-            await _context.SaveChangesAsync();
-            return Ok(new { mensagem = "Venda cancelada com sucesso." });
+            try
+            {
+                await _pedidos.CancelarVenda(id, User.ObterUsuarioId(), User.EhAdmin());
+                return Ok(new { mensagem = "Venda cancelada com sucesso." });
+            }
+            catch (RegraDeNegocioException ex)
+            {
+                if (ex.SemPermissao) return Forbid();
+                return BadRequest(new { mensagem = ex.Message });
+            }
         }
 
-        // PUT - DEVOLVER (cliente — só quando status == "Entregue")
-        [HttpPut("devolver/{id}")]
+        // PUT - devolver item entregue -> procedure dbo.sp_DevolverVenda
+        [HttpPut("devolver/{id:int}")]
         public async Task<IActionResult> Devolver(int id, [FromBody] DevolverDto dto)
         {
-            var venda = await _context.Vendas.FindAsync(id);
-            if (venda == null)
-                return NotFound("Venda não encontrada.");
-
-            if (venda.Status != "Entregue")
-                return BadRequest(new { mensagem = "Só é possível devolver um pedido já entregue." });
-
-            // "Defeito" → vira "Perda" (não volta ao estoque)
-            // outros    → vira "Devolvida" (volta ao estoque)
-            if (dto.Motivo == "Defeito")
+            try
             {
-                venda.Status = "Perda";
-                venda.MotivoDevolicao = "Defeito";
+                var status = await _pedidos.Devolver(id, User.ObterUsuarioId(), User.EhAdmin(), dto.Motivo, dto.MotivoTexto);
+                return Ok(new { mensagem = "Devolução registrada.", status });
             }
-            else
+            catch (RegraDeNegocioException ex)
             {
-                venda.Status = "Devolvida";
-                venda.MotivoDevolicao = dto.Motivo == "Outro" && !string.IsNullOrWhiteSpace(dto.MotivoTexto)
-                    ? $"Outro: {dto.MotivoTexto}"
-                    : dto.Motivo; // "Desistencia"
-
-                // Volta ao estoque
-                var produto = await _context.Produtos
-                    .FirstOrDefaultAsync(p => p.Nome.ToLower() == venda.ProdutoNome.ToLower());
-                if (produto != null)
-                    produto.Quantidade += venda.Quantidade;
+                if (ex.SemPermissao) return Forbid();
+                return BadRequest(new { mensagem = ex.Message });
             }
-
-            await _context.SaveChangesAsync();
-            return Ok(new { mensagem = "Devolução registrada.", status = venda.Status });
         }
     }
 }

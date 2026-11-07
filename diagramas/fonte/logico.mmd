@@ -1,0 +1,74 @@
+---
+title: TechBuild - Modelo Lógico (relacional, notação pé-de-galinha)
+---
+erDiagram
+    USUARIO ||--o{ COMPRA : "realiza"
+    USUARIO ||--o{ CARRINHO_ITEM : "monta"
+    USUARIO ||--o{ VENDA : "possui"
+    PRODUTO ||--o{ CARRINHO_ITEM : "está em"
+    COMPRA ||--|{ COMPRA_ITEM : "contém"
+    COMPRA |o--|{ VENDA : "acompanha cada item"
+    PRODUTO ||--o{ LOG_AUDITORIA : "alterações registradas (trigger)"
+
+    USUARIO {
+        inteiro id PK
+        texto nome "opcional"
+        texto email UK "único"
+        texto senha "hash BCrypt"
+        logico isAdmin
+    }
+    PRODUTO {
+        inteiro id PK
+        texto nome
+        texto tipo "categoria"
+        decimal preco
+        texto socket "opcional"
+        inteiro consumoEnergia
+        inteiro potencia "opcional"
+        texto imagem "opcional"
+        inteiro quantidade "estoque"
+    }
+    COMPRA {
+        inteiro id PK
+        inteiro usuarioId FK
+        data_hora dataCompra
+        texto status
+    }
+    COMPRA_ITEM {
+        inteiro id PK
+        inteiro compraId FK
+        texto produtoNome "copiado do produto"
+        texto produtoTipo
+        decimal preco "preço no dia da compra"
+        inteiro quantidade
+        texto origem "Carrinho ou MontePC"
+    }
+    VENDA {
+        inteiro id PK
+        inteiro compraId FK
+        inteiro usuarioId FK
+        texto produtoNome
+        texto produtoTipo
+        decimal preco
+        inteiro quantidade
+        texto status "Em Preparo, Em Transporte..."
+        texto origem
+        texto motivoDevolucao "opcional"
+        data_hora data
+    }
+    CARRINHO_ITEM {
+        inteiro id PK
+        inteiro usuarioId FK
+        inteiro produtoId FK
+        inteiro quantidade
+        texto origem
+        data_hora atualizadoEm
+    }
+    LOG_AUDITORIA {
+        inteiro id PK
+        texto tabela
+        texto acao "INSERT, UPDATE, DELETE"
+        inteiro registroId
+        texto descricao
+        data_hora dataHora
+    }

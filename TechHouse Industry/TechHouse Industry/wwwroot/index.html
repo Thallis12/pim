@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechBuild</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="overlayLaterais" onclick="fecharTodasLaterais()"></div>
+
+  <header class="topo">
+    <div class="logo">Tech<span>Build</span></div>
+
+    <nav class="menu-topo">
+      <button class="btn-topo" onclick="pagina('hardware')">Hardware</button>
+      <button class="btn-topo" onclick="pagina('monte')">Monte seu PC</button>
+      <button class="btn-topo" onclick="toggleFiltro()">Filtro</button>
+      <button id="btnCarrinhoTopo" class="btn-topo" onclick="toggleCarrinho()">🛒 Carrinho</button>
+      <button class="btn-topo btn-usuario" onclick="toggleUsuario()">👤</button>
+    </nav>
+  </header>
+
+  <aside id="filtro" class="painel-lateral filtro">
+    <button class="btn-fechar" onclick="toggleFiltro()">✕</button>
+
+    <h2>Filtro</h2>
+
+      <div class="bloco-filtro">
+        <label class="label-filtro">Preço</label>
+
+        <div class="range-wrapper">
+
+          <div class="range-duplo">
+            <input type="range" id="rangeMin" min="0" max="30000" value="0">
+            <input type="range" id="rangeMax" min="0" max="30000" value="30000">
+          </div>
+
+          <p id="valorRange"></p>
+
+        </div>
+      </div>
+
+      <div class="range-legenda">
+        <span>R$ 0</span>
+        <span id="valorRangeTexto">R$ 30000</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside id="carrinho" class="painel-lateral carrinho">
+    <button class="btn-fechar" onclick="toggleCarrinho()">✕</button>
+
+    <h2>Carrinho</h2>
+
+    <div class="carrinho-secao">
+      <h3>Produtos avulsos</h3>
+      <ul id="listaCarrinho"></ul>
+    </div>
+
+    <div class="carrinho-secao">
+      <h3>PC montado</h3>
+      <ul id="listaCarrinhoPC"></ul>
+    </div>
+
+    <p id="totalCarrinho" class="total-carrinho">Total: R$ 0</p>
+    <button class="btn-login btn-comprar" onclick="finalizarCompra()">Finalizar compra</button>
+  </aside>
+
+  <aside id="usuarioBarra" class="painel-lateral usuario-barra">
+    <button class="btn-fechar" onclick="toggleUsuario()">✕</button>
+
+    <h2>Login</h2>
+    <div id="infoUsuario" style="margin-bottom: 15px;">
+      <div id="usuarioNome" style="font-weight: bold;"></div>
+      <div id="usuarioEmail" style="font-size: 12px; opacity: 0.7;"></div>
+    </div>
+
+    <div id="usuarioLogadoArea" style="display:none;">
+      <p id="textoUsuarioLogado"></p>
+      <button class="btn-login" onclick="mostrarMinhasCompras()">Minhas compras</button>
+      <button id="btnPainelAdmin" class="btn-login" onclick="abrirPainelAdmin()" style="display:none;">Painel de controle</button>
+      <button class="btn-criar-menor" onclick="logout()">Sair</button>
+    </div>
+
+    <div id="loginArea">
+      <label>Email</label>
+      <input type="email" id="loginEmail" class="campo-login">
+
+      <label>Senha</label>
+      <input type="password" id="loginSenha" class="campo-login">
+
+      <button class="btn-login" onclick="fazerLogin()">Login</button>
+      <button class="btn-criar-menor" onclick="mostrarCriarConta()">Criar conta</button>
+    </div>
+
+    <div id="criarContaArea" style="display:none;">
+      <h3>Criar conta</h3>
+
+      <label>Nome</label>
+      <input id="criarNome" class="campo-login" placeholder="Nome de usuário">
+
+      <label>Email</label>
+      <input type="email" id="criarEmail" class="campo-login">
+
+      <label>Senha</label>
+      <input type="password" id="criarSenha" class="campo-login">
+
+      <label>Confirmar senha</label>
+      <input type="password" id="confirmarSenha" class="campo-login">
+
+      <button class="btn-login" onclick="criarConta()">Criar conta</button>
+      <button class="btn-criar-menor" onclick="voltarLogin()">Voltar</button>
+    </div>
+
+    <div id="minhasComprasArea" style="display:none;">
+      <h3>Minhas compras</h3>
+      <div id="listaMinhasCompras"></div>
+      <button class="btn-criar-menor" onclick="voltarUsuarioNormal()">Voltar</button>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+  <div id="msg" class="msg-centro"></div>
+
+  <main id="hardware" class="pagina pagina-ativa">
+    <section id="produtos" class="grid-produtos"></section>
+  </main>
+
+  <main id="monte" class="pagina">
+    <section class="cabecalho-monte">
+      <h2>Monte seu PC</h2>
+
+      <div class="botoes-fixos">
+        <button onclick="filtrarTipoMonte('CPU')">CPU</button>
+        <button onclick="filtrarTipoMonte('GPU')">GPU</button>
+        <button onclick="filtrarTipoMonte('RAM')">Memória RAM</button>
+        <button onclick="filtrarTipoMonte('PlacaMae')">Placa-mãe</button>
+        <button onclick="filtrarTipoMonte('SSD')">SSD</button>
+        <button onclick="filtrarTipoMonte('HD')">HD</button>
+        <button onclick="filtrarTipoMonte('SSDNVME')">NVMe</button>
+        <button onclick="filtrarTipoMonte('Fonte')">Fonte</button>
+        <button onclick="filtrarTipoMonte('Gabinete')">Gabinete</button>
+      </div>
+
+      <div class="barra-busca-estoque" style="background:var(--fundo);padding:10px 0;margin-top:10px;">
+        <input 
+          type="text" 
+          id="buscaMonte" 
+          placeholder="Buscar produto por nome..."
+          class="campo-login"
+          oninput="filtrarProdutosMonte()"
+        >
+      </div>
+    </section>
+
+    <section id="produtosMonte" class="grid-produtos"></section>
+    
+    <section class="resumo-monte">
+      <h3>Seu PC</h3>
+      <ul id="listaMonte"></ul>
+
+      <p id="totalMonte" class="total-carrinho">Total do PC: R$ 0</p>
+
+      <button class="btn-finalizar" onclick="finalizarPC()">
+        Adicionar montagem ao carrinho
+      </button>
+    </section>
+  </main>
+
+  <main id="painel" class="pagina">
+    <section class="cabecalho-monte">
+      <h2>Painel de Controle</h2>
+
+      <div class="botoes-fixos">
+        <button onclick="mostrarSecaoPainel('estoque')">Estoque</button>
+        <button onclick="mostrarSecaoPainel('novoProduto')">Novo produto</button>
+        <button onclick="mostrarSecaoPainel('criarAdmin')">Criar Admin</button>
+        <button onclick="mostrarSecaoPainel('vendas')">Vendas</button>
+        <button onclick="mostrarSecaoPainel('dashboard')">Dashboard</button>
+      </div>
+
+      <div class="barra-busca-estoque" style="background:var(--fundo);padding:10px 0;margin-top:10px;">
+        <input 
+          type="text" 
+          id="buscaVendas" 
+          placeholder="Buscar por ID, nome ou email..."
+          class="campo-login"
+          oninput="filtrarVendas()"
+        >
+        <input
+          type="text"
+          id="buscaEstoque"
+          placeholder="Buscar por nome ou ID..."
+          class="campo-login"
+          oninput="filtrarEstoque()"
+          style="display:none;"
+        >
+      </div>
+    </section>
+
+    <div id="secaoVendas" class="pagina">
+      <h2>Histórico de Vendas</h2>
+      <table class="tabela-estoque">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Itens</th>
+            <th>Qtd total</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaVendas"></tbody>
+      </table>
+    </div>
+
+    <div id="secaoEstoque" style="display:block;">
+      <div id="listaEstoque"></div>
+    </div>
+
+    <div id="secaoNovoProduto" style="display:none;">
+      <h3>Novo produto</h3>
+
+      <input id="novoNome" placeholder="Nome" class="campo-login">
+      <select id="novoTipo" class="campo-login">
+        <option value="CPU">CPU</option>
+        <option value="GPU">GPU</option>
+        <option value="RAM">RAM</option>
+        <option value="PlacaMae">Placa-mãe</option>
+        <option value="SSD">SSD</option>
+        <option value="HD">HD</option>
+        <option value="SSDNVME">NVMe</option>
+        <option value="Fonte">Fonte</option>
+        <option value="Gabinete">Gabinete</option>
+      </select>
+      <input id="novoPreco" type="number" placeholder="Preço" class="campo-login">
+      <input id="novoSocket" placeholder="Socket" class="campo-login">
+      <input id="novoConsumo" type="number" placeholder="Consumo energia" class="campo-login">
+      <input id="novoQuantidade" type="number" placeholder="Quantidade" class="campo-login">
+      <input id="novoPotencia" type="number" placeholder="Potência (apenas fonte)" class="campo-login">
+      <input type="file" id="novoImagemFile" accept="image/png, image/jpeg" class="input-file">
+
+      <button class="btn-login" onclick="criarProduto()">Criar produto</button>
+    </div>
+
+    <div id="secaoCriarAdmin" style="display:none;">
+      <h3>Criar administrador</h3>
+
+      <label>Email</label>
+      <input type="email" id="adminEmail" class="campo-login">
+
+      <label>Senha</label>
+      <input type="password" id="adminSenha" class="campo-login">
+
+      <label>Confirmar senha</label>
+      <input type="password" id="adminConfirmarSenha" class="campo-login">
+
+      <button class="btn-login" onclick="criarAdmin()">Criar Admin</button>
+    </div>
+
+    <div id="secaoDashboard" style="display:none;">
+      <h2 style="margin-bottom:20px;">Dashboard</h2>
+
+      <div class="cards-dashboard">
+        <div class="card-dashboard">
+          <h3>Total vendido</h3>
+          <p id="totalVendido">R$ 0</p>
+        </div>
+        <div class="card-dashboard">
+          <h3>Total de vendas</h3>
+          <p id="totalPedidos">0</p>
+        </div>
+      </div>
+
+      <div class="graficos-grid">
+        <div class="grafico-box">
+          <h3>Produtos mais vendidos</h3>
+          <canvas id="graficoProdutos"></canvas>
+        </div>
+        <div class="grafico-box">
+          <h3>Renda por dia</h3>
+          <canvas id="graficoDia"></canvas>
+        </div>
+        <div class="grafico-box">
+          <h3>Renda por mês</h3>
+          <canvas id="graficoMes"></canvas>
+        </div>
+        <div class="grafico-box">
+          <h3>Renda por ano</h3>
+          <canvas id="graficoAno"></canvas>
+        </div>
+        <div class="grafico-box">
+          <h3>Vendas / Devoluções / Cancelamentos</h3>
+          <canvas id="graficoStatus"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Endereço da API. Se o site for aberto pela própria API (Docker, nuvem ou
+    // https://localhost:7011), usa o mesmo endereço da página; se for aberto pelo
+    // Live Server do VS Code (porta 5500) ou direto do arquivo, usa a API local.
+    // (No PIM III a URL ficava fixa no código: esta era uma das limitações.)
+    const API_BASE = (location.protocol.startsWith("http") && location.port !== "5500")
+      ? location.origin
+      : "https://localhost:7011";
+    const API = API_BASE + "/api/Produtos";
+
+    // ─── Autenticação (JWT) ──────────────────────────────────────────────────────
+    // O token vem no login e fica dentro do objeto "usuario" salvo no localStorage.
+    function obterToken() {
+      if (usuarioLogado && usuarioLogado.token) return usuarioLogado.token;
+      try {
+        const u = JSON.parse(localStorage.getItem("usuario"));
+        return u && u.token ? u.token : null;
+      } catch { return null; }
+    }
+
+    // Igual ao fetch, mas envia o token (Authorization: Bearer ...) em toda requisição.
+    function apiFetch(url, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      const token = obterToken();
+      if (token) headers["Authorization"] = "Bearer " + token;
+
+      return fetch(url, { ...options, headers }).then(resp => {
+        // 401 com token = sessão expirada/inválida -> volta para o login
+        if (resp.status === 401 && token && !url.includes("/api/Usuarios/login")) {
+          logout();
+          setTimeout(() => msg("Sessão expirada. Faça login novamente."), 400);
+        }
+        return resp;
+      });
+    }
+
+    // Lê a mensagem de erro que a API devolveu (ex.: "Já existe um produto com esse nome")
+    async function mensagemErro(res, padrao) {
+      try {
+        const dados = await res.json();
+        if (dados.mensagem) return dados.mensagem;
+        if (dados.errors) return "Dados inválidos: " + Object.keys(dados.errors).join(", ");
+      } catch (e) { /* resposta sem JSON */ }
+      if (res.status === 401 || res.status === 403) return "Você precisa estar logado como administrador.";
+      return padrao + " (erro " + res.status + ")";
+    }
+
+    // Diminui a foto escolhida antes de enviar para a API: no máximo 600 px e em JPEG.
+    // Uma foto de celular/câmera pode ter 20 MB; sem isso o catálogo inteiro fica
+    // pesado demais e os produtos param de aparecer. Depois de reduzida fica com ~70 KB.
+    function lerImagemReduzida(arquivo, ladoMaximo = 600) {
+      return new Promise((resolve, reject) => {
+        const leitor = new FileReader();
+        leitor.onerror = reject;
+        leitor.onload = () => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            const escala = Math.min(1, ladoMaximo / Math.max(img.width, img.height));
+            const canvas = document.createElement("canvas");
+            canvas.width  = Math.round(img.width * escala);
+            canvas.height = Math.round(img.height * escala);
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#FFFFFF";                 // fundo branco (PNG transparente)
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          img.src = leitor.result;
+        };
+        leitor.readAsDataURL(arquivo);
+      });
+    }
+
+    let produtos = [];
+    let carrinho = [];
+    let carrinhoPC = [];
+    let monte = [];
+    let tipoAtualMonte = null;
+    let usuarioLogado = null;
+    let produtosEstoque = [];
+    let produtoEditandoId = null;
+    let vendasCache = [];
+    // Carrinho salvo no banco (ver "Carrinho salvo no banco" mais abaixo)
+    let assinaturaCarrinho = null;  // "foto" do último carrinho salvo/lido (para comparar)
+    let aplicandoCarrinho  = false; // true enquanto o site preenche o carrinho vindo da API
+    let timerSalvarCarrinho = null; // espera 0,4 s antes de salvar (junta cliques rápidos)
+
+    // ─── Gráficos ────────────────────────────────────────────────────────────────
+    let chartProdutos = null;
+    let chartDia      = null;
+    let chartMes      = null;
+    let chartAno      = null;
+    let chartStatus   = null;
+
+    // ─── Utilitários de status ───────────────────────────────────────────────────
+    function corStatus(status) {
+      if (status === "Em Preparo")    return "#B45309";
+      if (status === "Em Transporte") return "#1D4ED8";
+      if (status === "Entregue")      return "#15803D";
+      if (status === "Cancelada")     return "#B91C1C";
+      if (status === "Devolvida")     return "#C2410C";
+      if (status === "Perda")         return "#7F1D1D";
+      if (status === "Concluida")     return "#15803D"; // legado
+      if (status === "Parcial")       return "#B45309";
+      return "#5B6576";
+    }
+
+    // Próximo status possível na sequência do admin
+    function proximoStatus(status) {
+      if (status === "Em Preparo")    return "Em Transporte";
+      if (status === "Em Transporte") return "Entregue";
+      return null;
+    }
+
+    function toggleVenda(compraId) {
+      const el = document.getElementById(`detalhe-${compraId}`);
+      if (!el) return;
+      el.style.display = el.style.display === "none" ? "table-row" : "none";
+    }
+
+    // Avança status de UMA venda (admin)
+    async function avancarStatusVenda(vendaId, compraId) {
+      try {
+        const res  = await apiFetch(`${API_BASE}/api/Vendas/avancar-status/${vendaId}`, { method: "PUT" });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Erro ao avançar status."); return; }
+        msg("Status atualizado: " + data.status);
+        await carregarVendas();
+      } catch (e) { msg("Erro ao avançar status."); console.error(e); }
+    }
+
+    // Modal de devolução (cliente)
+    let _devolverVendaId = null;
+    function abrirModalDevolucao(vendaId) {
+      _devolverVendaId = vendaId;
+      document.getElementById("modalDevolucao").style.display = "flex";
+      document.getElementById("motivoOutroTexto").style.display = "none";
+      document.getElementById("motivoOutroTexto").value = "";
+      // reset radio
+      document.querySelectorAll('input[name="motivoDev"]').forEach(r => r.checked = false);
+    }
+    function fecharModalDevolucao() {
+      document.getElementById("modalDevolucao").style.display = "none";
+      _devolverVendaId = null;
+    }
+    async function confirmarDevolucao() {
+      const radio = document.querySelector('input[name="motivoDev"]:checked');
+      if (!radio) { msg("Selecione um motivo de devolução."); return; }
+      const motivo = radio.value;
+      const motivoTexto = motivo === "Outro" ? document.getElementById("motivoOutroTexto").value.trim() : "";
+      if (motivo === "Outro" && !motivoTexto) { msg("Descreva o motivo."); return; }
+      try {
+        const res  = await apiFetch(`${API_BASE}/api/Vendas/devolver/${_devolverVendaId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ motivo, motivoTexto })
+        });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Erro ao registrar devolução."); return; }
+        msg("Devolução registrada: " + data.status);
+        fecharModalDevolucao();
+        mostrarMinhasCompras();
+      } catch (e) { msg("Erro ao devolver."); console.error(e); }
+    }
+
+    function isAdminLogin() {
+      return !!(usuarioLogado && usuarioLogado.isAdmin === true);
+    }
+
+    // ─── Overlay / laterais ──────────────────────────────────────────────────────
+    function abrirOverlay() {
+      document.getElementById("overlayLaterais").classList.add("ativo");
+    }
+
+    function fecharOverlay() {
+      document.getElementById("overlayLaterais").classList.remove("ativo");
+    }
+
+    function resetarBarraUsuario() {
+      document.getElementById("minhasComprasArea").style.display = "none";
+      document.getElementById("criarContaArea").style.display   = "none";
+
+      const btnPainelAdmin = document.getElementById("btnPainelAdmin");
+
+      if (usuarioLogado) {
+        document.getElementById("usuarioLogadoArea").style.display = "block";
+        document.getElementById("loginArea").style.display         = "none";
+        btnPainelAdmin.style.display = isAdminLogin() ? "block" : "none";
+      } else {
+        document.getElementById("usuarioLogadoArea").style.display = "none";
+        document.getElementById("loginArea").style.display         = "block";
+        btnPainelAdmin.style.display = "none";
+      }
+    }
+
+    function fecharTodasLaterais() {
+      document.getElementById("filtro").classList.remove("ativo");
+      document.getElementById("carrinho").classList.remove("ativo");
+      document.getElementById("usuarioBarra").classList.remove("ativo");
+      fecharOverlay();
+      resetarBarraUsuario();
+    }
+
+    function toggleFiltro() {
+      const el = document.getElementById("filtro");
+      const vaiAbrir = !el.classList.contains("ativo");
+      fecharTodasLaterais();
+      if (vaiAbrir) { el.classList.add("ativo"); abrirOverlay(); }
+    }
+
+    function toggleCarrinho() {
+      const el = document.getElementById("carrinho");
+      const vaiAbrir = !el.classList.contains("ativo");
+      fecharTodasLaterais();
+      if (vaiAbrir) { el.classList.add("ativo"); abrirOverlay(); }
+    }
+
+    function toggleUsuario() {
+      const el = document.getElementById("usuarioBarra");
+      const vaiAbrir = !el.classList.contains("ativo");
+      fecharTodasLaterais();
+
+      if (vaiAbrir) {
+        resetarBarraUsuario();
+
+        let usuario = null;
+        try { usuario = JSON.parse(localStorage.getItem("usuario")); } catch { usuario = null; }
+
+        if (usuario) {
+          let nome = usuario.nome || "Usuário";
+          if (usuario.isAdmin) nome += " (Admin)";
+          document.getElementById("usuarioNome").innerText  = nome;
+          document.getElementById("usuarioEmail").innerText = usuario.email;
+        } else {
+          document.getElementById("usuarioNome").innerText  = "Não logado";
+          document.getElementById("usuarioEmail").innerText = "";
+        }
+
+        el.classList.add("ativo");
+        abrirOverlay();
+      }
+    }
+
+    function abrirPainelAdmin() {
+      if (!isAdminLogin()) { msg("Acesso permitido apenas para administrador."); return; }
+      fecharTodasLaterais();
+      pagina('painel');
+      mostrarSecaoPainel('estoque');
+      carregarEstoque();
+    }
+
+    // ─── Vendas ──────────────────────────────────────────────────────────────────
+    async function carregarVendas() {
+      try {
+        const res   = await apiFetch(API_BASE + "/api/Vendas");
+        const vendas = await res.json();
+        vendasCache  = vendas;
+
+        if (vendas.length === 0) {
+          document.getElementById("tabelaVendas").innerHTML = "<tr><td colspan='6'>Nenhuma venda</td></tr>";
+        } else {
+          renderizarVendas(vendas);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function filtrarVendas() {
+      const termo = document.getElementById("buscaVendas").value.toLowerCase();
+      const filtradas = vendasCache.filter(v =>
+        String(v.compraId).includes(termo) ||
+        (v.usuarioNome && v.usuarioNome.toLowerCase().includes(termo))
+      );
+      renderizarVendas(filtradas);
+    }
+
+    function renderizarVendas(vendas) {
+      const tabela = document.getElementById("tabelaVendas");
+      tabela.innerHTML = "";
+
+      const agrupado = {};
+
+      vendas.forEach(v => {
+        if (!agrupado[v.compraId]) {
+          agrupado[v.compraId] = { compraId: v.compraId, data: v.data, usuario: v.usuarioNome, itens: [] };
+        }
+        agrupado[v.compraId].itens.push(v);
+      });
+
+      Object.values(agrupado).forEach((c, index) => {
+        const itens             = c.itens;
+        const total             = itens.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+        const quantidadeTotal   = itens.reduce((s, i) => s + i.quantidade, 0);
+        const itensVenda        = itens.filter(i => i.origem === "Carrinho");
+        const itensPC           = itens.filter(i => i.origem === "MontePC");
+
+        // Status geral do grupo
+        const statusList = itens.map(i => i.status || "");
+        const statusFinais = ["Devolvida", "Perda", "Cancelada", "Entregue"];
+        let statusGrupo;
+        if (statusList.every(s => s === "Cancelada"))          statusGrupo = "Cancelada";
+        else if (statusList.every(s => s === "Devolvida"))     statusGrupo = "Devolvida";
+        else if (statusList.every(s => s === "Perda"))         statusGrupo = "Perda";
+        else if (statusList.every(s => s === "Entregue"))      statusGrupo = "Entregue";
+        else if (statusList.every(s => s === "Em Preparo"))    statusGrupo = "Em Preparo";
+        else if (statusList.every(s => s === "Em Transporte")) statusGrupo = "Em Transporte";
+        else if (statusList.every(s => statusFinais.includes(s))) {
+          if (statusList.some(s => s === "Perda"))         statusGrupo = "Perda";
+          else if (statusList.some(s => s === "Devolvida")) statusGrupo = "Devolvida";
+          else                                               statusGrupo = "Parcial";
+        }
+        else statusGrupo = "Parcial";
+
+        // Botão avançar status (admin) — avança todos os itens que ainda podem avançar
+        const podeAvancar = itens.some(i => proximoStatus(i.status));
+        const btnAvancar = podeAvancar
+          ? `<button onclick="event.stopPropagation(); avancarStatusGrupo(${c.compraId})" style="font-size:12px;padding:4px 8px;">▶ Avançar status</button>`
+          : "";
+
+        // Botão cancelar (admin)
+        const podeCancelarAdmin = itens.some(i => i.status === "Em Preparo");
+        const btnCancelar = podeCancelarAdmin
+          ? `<button class="btn-remover" onclick="event.stopPropagation(); cancelarCompra(${c.compraId})" style="font-size:12px;padding:4px 8px;">✕ Cancelar</button>`
+          : "";
+
+        tabela.innerHTML += `
+          <tr onclick="toggleVenda(${c.compraId})" class="linha-venda ${index % 2 === 0 ? 'par' : 'impar'}">
+            <td>#${String(c.compraId).padStart(6, '0')}</td>
+            <td>${itens.length} item(s)</td>
+            <td>${quantidadeTotal}</td>
+            <td>R$ ${total.toLocaleString("pt-BR")}</td>
+            <td style="color:${corStatus(statusGrupo)}">${statusGrupo}</td>
+            <td>${c.data ? new Date(c.data).toLocaleString("pt-BR") : "-"}</td>
+            <td style="white-space:nowrap; display:flex; gap:4px; flex-wrap:wrap;">${btnAvancar}${btnCancelar}</td>
+          </tr>
+          <tr id="detalhe-${c.compraId}" style="display:none;">
+            <td colspan="7">
+              <div class="detalhe-venda">
+                <p><b>Usuário:</b> ${c.usuario || "Desconhecido"}</p>
+                ${itensVenda.length > 0 ? `
+                  <p style="margin-top:10px;"><b>🛒 Venda:</b></p>
+                  ${itensVenda.map(i => `<p>• ${i.produtoNome} x${i.quantidade} — R$ ${i.preco.toLocaleString("pt-BR")} <span style="color:${corStatus(i.status)}">[${i.status}]</span>${i.motivoDevolicao ? ` — Motivo: ${i.motivoDevolicao}` : ""}</p>`).join("")}
+                ` : ""}
+                ${itensPC.length > 0 ? `
+                  <p style="margin-top:10px;"><b>🖥️ Monte seu PC:</b></p>
+                  ${itensPC.map(i => `<p>• ${i.produtoNome} x${i.quantidade} — R$ ${i.preco.toLocaleString("pt-BR")} <span style="color:${corStatus(i.status)}">[${i.status}]</span>${i.motivoDevolicao ? ` — Motivo: ${i.motivoDevolicao}` : ""}</p>`).join("")}
+                ` : ""}
+                <p style="margin-top:10px;"><b>Total:</b> R$ ${total.toLocaleString("pt-BR")}</p>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    // Avança status de todos os itens de um compraId que ainda podem avançar
+    async function avancarStatusGrupo(compraId) {
+      const itens = vendasCache.filter(v => v.compraId === compraId && proximoStatus(v.status));
+      for (const item of itens) {
+        await apiFetch(`${API_BASE}/api/Vendas/avancar-status/${item.id}`, { method: "PUT" });
+      }
+      msg("Status avançado com sucesso.");
+      await carregarVendas();
+    }
+
+    // ─── Painel ──────────────────────────────────────────────────────────────────
+    function mostrarSecaoPainel(secao) {
+      document.getElementById("secaoEstoque").style.display    = "none";
+      document.getElementById("secaoNovoProduto").style.display = "none";
+      document.getElementById("secaoCriarAdmin").style.display  = "none";
+      document.getElementById("secaoVendas").style.display      = "none";
+      document.getElementById("secaoDashboard").style.display   = "none";
+
+      document.getElementById("buscaVendas").style.display  = "none";
+      document.getElementById("buscaEstoque").style.display = "none";
+
+      if (secao === "estoque") {
+        document.getElementById("secaoEstoque").style.display   = "block";
+        document.getElementById("buscaEstoque").style.display   = "block";
+        carregarEstoque();
+      }
+      if (secao === "novoProduto")  document.getElementById("secaoNovoProduto").style.display  = "block";
+      if (secao === "criarAdmin")   document.getElementById("secaoCriarAdmin").style.display   = "block";
+      if (secao === "vendas") {
+        document.getElementById("secaoVendas").style.display  = "block";
+        document.getElementById("buscaVendas").style.display  = "block";
+        carregarVendas();
+      }
+      if (secao === "dashboard") {
+        document.getElementById("secaoDashboard").style.display = "block";
+        carregarDashboard(); // ✅ chama direto — ela já busca da API internamente
+      }
+    }
+
+    // ─── Auth ────────────────────────────────────────────────────────────────────
+    function precisaEstarLogado() {
+      if (!usuarioLogado) { msg("Você precisa fazer login antes."); return true; }
+      return false;
+    }
+
+    function atualizarVisibilidadeCarrinho() {
+      const btnCarrinho = document.getElementById("btnCarrinhoTopo");
+      if (!btnCarrinho) return;
+      btnCarrinho.style.display = usuarioLogado ? "inline-block" : "none";
+    }
+
+    function atualizarAreaUsuario() {
+      const areaLogado      = document.getElementById("usuarioLogadoArea");
+      const loginArea       = document.getElementById("loginArea");
+      const criarContaArea  = document.getElementById("criarContaArea");
+      const minhasComprasArea = document.getElementById("minhasComprasArea");
+      const btnPainelAdmin  = document.getElementById("btnPainelAdmin");
+
+      if (usuarioLogado) {
+        areaLogado.style.display      = "block";
+        loginArea.style.display       = "none";
+        criarContaArea.style.display  = "none";
+        minhasComprasArea.style.display = "none";
+        btnPainelAdmin.style.display  = isAdminLogin() ? "block" : "none";
+      } else {
+        areaLogado.style.display      = "none";
+        loginArea.style.display       = "block";
+        criarContaArea.style.display  = "none";
+        minhasComprasArea.style.display = "none";
+        btnPainelAdmin.style.display  = "none";
+      }
+    }
+
+    function logout() {
+      usuarioLogado = null;
+      localStorage.removeItem("usuario");
+      carrinho = []; carrinhoPC = []; monte = [];
+      assinaturaCarrinho = null; // o carrinho continua salvo no banco para o próximo login
+      atualizarCarrinho();
+      atualizarMonte();
+      atualizarAreaUsuario();
+      atualizarVisibilidadeCarrinho();
+      fecharTodasLaterais();
+      pagina('hardware');
+      msg("Logout realizado com sucesso.");
+    }
+
+    function mostrarCriarConta() {
+      document.getElementById("loginArea").style.display        = "none";
+      document.getElementById("criarContaArea").style.display   = "block";
+      document.getElementById("usuarioLogadoArea").style.display = "none";
+      document.getElementById("minhasComprasArea").style.display = "none";
+    }
+
+    function voltarLogin() {
+      document.getElementById("criarContaArea").style.display = "none";
+      document.getElementById("loginArea").style.display      = "block";
+    }
+
+    function voltarUsuarioNormal() {
+      document.getElementById("minhasComprasArea").style.display = "none";
+      atualizarAreaUsuario();
+    }
+
+    async function criarConta() {
+      const nome           = document.getElementById("criarNome").value.trim();
+      const email          = document.getElementById("criarEmail").value.trim();
+      const senha          = document.getElementById("criarSenha").value.trim();
+      const confirmarSenha = document.getElementById("confirmarSenha").value.trim();
+
+      if (!nome || !email || !senha || !confirmarSenha) { msg("Preencha todos os campos."); return; }
+      if (nome.length < 3)  { msg("O nome deve ter no mínimo 3 caracteres."); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg("Email inválido."); return; }
+      if (senha.length < 5) { msg("A senha deve ter no mínimo 5 caracteres."); return; }
+      const senhaValida = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$/;
+      if (!senhaValida.test(senha)) { msg("A senha só pode conter caracteres válidos."); return; }
+      if (senha !== confirmarSenha) { msg("As senhas não coincidem."); return; }
+
+      try {
+        const res  = await apiFetch(API_BASE + "/api/Usuarios/criar-conta", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nome, email, senha, confirmarSenha })
+        });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Não foi possível criar a conta."); return; }
+        msg("Conta criada com sucesso.");
+        document.getElementById("criarNome").value      = "";
+        document.getElementById("criarEmail").value     = "";
+        document.getElementById("criarSenha").value     = "";
+        document.getElementById("confirmarSenha").value = "";
+        voltarLogin();
+      } catch (e) { msg("Erro ao criar conta."); console.error(e); }
+    }
+
+    async function fazerLogin() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const senha = document.getElementById("loginSenha").value.trim();
+      if (!email || !senha) { msg("Preencha email e senha."); return; }
+
+      try {
+        const res  = await apiFetch(API_BASE + "/api/Usuarios/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha })
+        });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Senha inválida."); return; }
+        localStorage.setItem("usuario", JSON.stringify(data));
+        usuarioLogado = data;
+        atualizarVisibilidadeCarrinho();
+        carregarCarrinhoSalvo(); // traz o carrinho salvo desta conta
+        msg("Login realizado com sucesso.");
+        toggleUsuario();
+      } catch (e) { msg("Erro ao fazer login."); console.error(e); }
+    }
+
+    async function criarAdmin() {
+      if (!isAdminLogin()) { msg("Apenas administrador pode criar outro administrador."); return; }
+
+      const email          = document.getElementById("adminEmail").value.trim();
+      const senha          = document.getElementById("adminSenha").value.trim();
+      const confirmarSenha = document.getElementById("adminConfirmarSenha").value.trim();
+
+      if (!email || !senha || !confirmarSenha) { msg("Preencha todos os campos."); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg("Email inválido."); return; }
+      if (senha.length < 5) { msg("A senha deve ter no mínimo 5 caracteres."); return; }
+      const senhaValida = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$/;
+      if (!senhaValida.test(senha)) { msg("A senha só pode conter letras, números e caracteres especiais permitidos."); return; }
+      if (senha !== confirmarSenha) { msg("As senhas não coincidem."); return; }
+
+      try {
+        const res  = await apiFetch(API_BASE + "/api/Usuarios/criar-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha, confirmarSenha })
+        });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Não foi possível criar o administrador."); return; }
+        msg("Administrador criado com sucesso.");
+        document.getElementById("adminEmail").value          = "";
+        document.getElementById("adminSenha").value          = "";
+        document.getElementById("adminConfirmarSenha").value = "";
+      } catch (e) { msg("Erro ao criar administrador."); console.error(e); }
+    }
+
+    // ─── Produtos / Hardware ─────────────────────────────────────────────────────
+    async function carregar() {
+      try {
+        const res = await apiFetch(API);
+        if (!res.ok) throw new Error("Falha ao carregar produtos.");
+        produtos = await res.json();
+        mostrarHardware(produtos);
+      } catch (e) {
+        msg("Não foi possível carregar os produtos. Verifique se a API está rodando.");
+        console.error(e);
+      }
+      if (!tipoAtualMonte) mostrarMonte(produtos);
+    }
+
+    function pagina(nome) {
+      document.getElementById("hardware").classList.remove("pagina-ativa");
+      document.getElementById("monte").classList.remove("pagina-ativa");
+      document.getElementById("painel").classList.remove("pagina-ativa");
+      document.getElementById(nome).classList.add("pagina-ativa");
+      if (nome === "painel") mostrarSecaoPainel("vendas");
+    }
+
+    function toast(texto) { msg(texto); }
+
+    function msg(texto) {
+      const m = document.getElementById("msg");
+      m.innerText = texto;
+      m.classList.add("ativo");
+      setTimeout(() => m.classList.remove("ativo"), 2400);
+    }
+
+    function formatarPreco(valor) { return Number(valor).toLocaleString("pt-BR"); }
+
+    function nomeTipoExibicao(tipo) {
+      if (tipo === "RAM" || tipo === "Memoria RAM") return "Memória RAM";
+      if (tipo === "PlacaMae")  return "Placa-mãe";
+      if (tipo === "SSDNVME")   return "NVMe";
+      return tipo;
+    }
+
+    function tipoEquivalente(tipo) {
+      if (tipo === "RAM" || tipo === "Memoria RAM") return "RAM";
+      return tipo;
+    }
+
+    function imgSrc(p) {
+      if (!p.imagemUrl || p.imagemUrl.includes("via.placeholder.com")) return "sem-imagem.jpg";
+      return p.imagemUrl;
+    }
+
+    // Texto da quantidade em estoque mostrado no card do produto (Hardware e Monte seu PC)
+    function textoEstoque(p) {
+      const q = Number(p.quantidade) || 0;
+      if (q <= 0) return `<p class="estoque-info" style="color:var(--erro);font-weight:bold;font-size:13px;margin:4px 0;">Sem estoque</p>`;
+      if (q <= 2) return `<p class="estoque-info" style="color:var(--alerta);font-weight:bold;font-size:13px;margin:4px 0;">Últimas ${q} unidade${q > 1 ? "s" : ""} em estoque</p>`;
+      return `<p class="estoque-info" style="color:var(--sucesso);font-size:13px;margin:4px 0;">${q} unidades em estoque</p>`;
+    }
+
+    function mostrarHardware(lista) {
+      const div = document.getElementById("produtos");
+      div.innerHTML = "";
+      lista.forEach(p => {
+        const semEstoque = (p.quantidade !== undefined && p.quantidade !== null && p.quantidade <= 0);
+        div.innerHTML += `
+          <div class="card">
+            <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
+            <h3>${p.nome}</h3>
+            <p>${nomeTipoExibicao(p.tipo)}</p>
+            <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+            ${textoEstoque(p)}
+            ${semEstoque
+              ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
+              : `<button class="btn-comprar" onclick='addCarrinho(${JSON.stringify(p)})'>Comprar</button>`}
+          </div>
+        `;
+      });
+    }
+
+    // ─── Carrinho ────────────────────────────────────────────────────────────────
+    function addCarrinho(p) {
+      if (precisaEstarLogado()) return;
+      carrinho.push(p);
+      atualizarCarrinho();
+      toast("Produto adicionado ao carrinho.");
+    }
+
+    function atualizarCarrinho() {
+      const lista   = document.getElementById("listaCarrinho");
+      const listaPC = document.getElementById("listaCarrinhoPC");
+      const total   = document.getElementById("totalCarrinho");
+      lista.innerHTML = ""; listaPC.innerHTML = "";
+      let soma = 0;
+
+      carrinho.forEach((p, i) => {
+        soma += Number(p.preco);
+        lista.innerHTML += `
+          <li>${p.nome} - R$ ${formatarPreco(p.preco)}
+            <button class="btn-mini" onclick="removerCarrinho(${i})">Remover</button>
+          </li>`;
+      });
+
+      carrinhoPC.forEach((p, i) => {
+        soma += Number(p.preco);
+        listaPC.innerHTML += `
+          <li>${p.nome} - R$ ${formatarPreco(p.preco)}
+            <button class="btn-mini" onclick="removerCarrinhoPC(${i})">Remover</button>
+          </li>`;
+      });
+
+      total.innerText = "Total: R$ " + formatarPreco(soma);
+      salvarCarrinho(); // grava no banco (mesmo carrinho no site e no app)
+    }
+
+    function removerCarrinho(index) {
+      carrinho.splice(index, 1);
+      atualizarCarrinho();
+      const max = Number(document.getElementById("rangeMax").value);
+      mostrarHardware(produtos.filter(p => Number(p.preco) <= max));
+      toast("Item removido do carrinho.");
+    }
+
+    function removerCarrinhoPC(index) {
+      carrinhoPC.splice(index, 1);
+      atualizarCarrinho();
+      const max = Number(document.getElementById("rangeMax").value);
+      mostrarHardware(produtos.filter(p => Number(p.preco) <= max));
+      toast("Item removido do carrinho.");
+    }
+
+    // ─── Monte seu PC ────────────────────────────────────────────────────────────
+    function filtrarTipoMonte(tipo) {
+      tipoAtualMonte = tipo;
+      const precoMax   = Number(document.getElementById("rangeMax").value);
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+      const lista = produtos.filter(p =>
+        tipoEquivalente(p.tipo) === tipo &&
+        Number(p.preco) <= precoMax &&
+        (!termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca)))
+      );
+      mostrarMonte(lista);
+    }
+
+    function filtrarProdutosMonte() {
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+      const precoMax   = Number(document.getElementById("rangeMax").value);
+      let lista;
+      if (tipoAtualMonte) {
+        lista = produtos.filter(p =>
+          tipoEquivalente(p.tipo) === tipoAtualMonte &&
+          Number(p.preco) <= precoMax &&
+          (!termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca)))
+        );
+      } else {
+        lista = produtos.filter(p =>
+          Number(p.preco) <= precoMax &&
+          (!termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca)))
+        );
+      }
+      mostrarMonte(lista);
+    }
+
+    function atualizarListaMonteAtual() {
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+      const precoMax   = Number(document.getElementById("rangeMax").value);
+      const lista = produtos.filter(p =>
+        Number(p.preco) <= precoMax &&
+        (!termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca))) &&
+        (!tipoAtualMonte || tipoEquivalente(p.tipo) === tipoAtualMonte)
+      );
+      mostrarMonte(lista);
+    }
+
+    function mostrarMonte(lista) {
+      const div = document.getElementById("produtosMonte");
+      div.innerHTML = "";
+      lista.forEach(p => {
+        const qtd        = quantidadeProdutoNoMonte(p.nome);
+        const nomeTipo   = nomeTipoExibicao(p.tipo);
+        const tipoBase   = tipoEquivalente(p.tipo);
+        const tipoQtd    = ["RAM", "SSD", "HD", "SSDNVME"];
+        const semEstoque = (p.quantidade !== undefined && p.quantidade !== null && p.quantidade <= 0);
+        if (tipoQtd.includes(tipoBase)) {
+          div.innerHTML += `
+            <div class="card">
+              <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
+              <h3>${p.nome}</h3><p>${nomeTipo}</p>
+              <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+            ${textoEstoque(p)}
+              ${semEstoque && qtd === 0
+                ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
+                : `<div class="controle-qtd">
+                    <button onclick='removerUnidadeMonte(${JSON.stringify(p)})'>-</button>
+                    <span class="qtd-badge">${qtd}</span>
+                    <button onclick='adicionarUnidadeMonte(${JSON.stringify(p)})' ${semEstoque ? 'disabled style="opacity:0.4;"' : ''}>+</button>
+                  </div>`}
+            </div>`;
+        } else {
+          const jaSelecionado = qtd > 0;
+          div.innerHTML += `
+            <div class="card">
+              <img loading="lazy" src="${imgSrc(p)}" alt="${p.nome}">
+              <h3>${p.nome}</h3><p>${nomeTipo}</p>
+              <p class="preco">R$ ${formatarPreco(p.preco)}</p>
+            ${textoEstoque(p)}
+              ${jaSelecionado
+                ? `<button class="btn-remover" onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Remover</button>`
+                : semEstoque
+                  ? `<button disabled style="opacity:0.4;cursor:not-allowed;">Sem estoque</button>`
+                  : `<button class="btn-comprar" onclick='toggleSelecionadoSimples(${JSON.stringify(p)})'>Adicionar</button>`}
+            </div>`;
+        }
+      });
+    }
+
+    function quantidadeProdutoNoMonte(nome) { return monte.filter(x => x.nome === nome).length; }
+    function contarTiposNoMonte(tipos)       { return monte.filter(x => tipos.includes(tipoEquivalente(x.tipo))).length; }
+
+    function validarFonteSuportaSetup(pecas, novaFonte = null) {
+      let fonte = novaFonte || pecas.find(p => tipoEquivalente(p.tipo) === "Fonte");
+      if (!fonte) return true;
+      const potencia      = Number(fonte.potencia || 0);
+      const consumoTotal  = pecas.reduce((soma, p) => soma + Number(p.consumoEnergia || 0), 0);
+      const potenciaMinima = Math.ceil(consumoTotal * 1.3);
+      if (potencia < potenciaMinima) {
+        msg(`A fonte selecionada não suporta esta configuração. É necessária uma fonte de pelo menos ${potenciaMinima}W.`);
+        return false;
+      }
+      return true;
+    }
+
+    function validarTipo(tipo) {
+      const qtd      = monte.filter(x => tipoEquivalente(x.tipo) === tipo).length;
+      const qtdSSDHD = contarTiposNoMonte(["SSD", "HD"]);
+      const qtdNVME  = contarTiposNoMonte(["SSDNVME"]);
+      if (tipo === "CPU"      && qtd >= 1) { msg("É permitido apenas 1 processador na montagem.");     return false; }
+      if (tipo === "GPU"      && qtd >= 1) { msg("É permitida apenas 1 placa de vídeo na montagem.");  return false; }
+      if (tipo === "PlacaMae" && qtd >= 1) { msg("É permitida apenas 1 placa-mãe na montagem.");       return false; }
+      if (tipo === "Fonte"    && qtd >= 1) { msg("É permitida apenas 1 fonte na montagem.");            return false; }
+      if (tipo === "Gabinete" && qtd >= 1) { msg("É permitido apenas 1 gabinete na montagem.");         return false; }
+      if (tipo === "RAM"      && qtd >= 4) { msg("É permitido no máximo 4 módulos de memória RAM.");    return false; }
+      if ((tipo === "SSD" || tipo === "HD") && qtdSSDHD >= 4) { msg("É permitido no máximo 4 unidades somando SSD e HD."); return false; }
+      if (tipo === "SSDNVME"  && qtdNVME >= 2) { msg("É permitido no máximo 2 SSDs NVMe."); return false; }
+      return true;
+    }
+
+    function toggleSelecionadoSimples(p) {
+      if (precisaEstarLogado()) return;
+      const jaSelecionado = monte.some(x => x.nome === p.nome);
+      const tipo = tipoEquivalente(p.tipo);
+      if (jaSelecionado) {
+        monte = monte.filter(x => x.nome !== p.nome);
+        toast("Peça removida da montagem.");
+      } else {
+        if (!validarTipo(tipo)) return;
+        if (tipo === "Fonte") {
+          const pecasSemFonte = monte.filter(x => tipoEquivalente(x.tipo) !== "Fonte");
+          if (!validarFonteSuportaSetup(pecasSemFonte, p)) return;
+          monte = pecasSemFonte;
+          monte.push(p);
+        } else {
+          const tentativa = [...monte, p];
+          if (!validarFonteSuportaSetup(tentativa)) return;
+          monte.push(p);
+        }
+        toast("Peça adicionada ao seu PC.");
+      }
+      atualizarMonte();
+      atualizarListaMonteAtual();
+    }
+
+    function adicionarUnidadeMonte(p) {
+      if (precisaEstarLogado()) return;
+      const tipo = tipoEquivalente(p.tipo);
+      if (!validarTipo(tipo)) return;
+      const tentativa = [...monte, p];
+      if (!validarFonteSuportaSetup(tentativa)) return;
+      monte.push(p);
+      atualizarMonte();
+      atualizarListaMonteAtual();
+      toast("Unidade adicionada à montagem.");
+    }
+
+    function removerUnidadeMonte(p) {
+      const index = monte.findIndex(x => x.nome === p.nome);
+      if (index === -1) return;
+      monte.splice(index, 1);
+      atualizarMonte();
+      atualizarListaMonteAtual();
+      toast("Unidade removida da montagem.");
+    }
+
+    function atualizarMonte() {
+      const lista = document.getElementById("listaMonte");
+      const total = document.getElementById("totalMonte");
+      lista.innerHTML = "";
+      let soma = 0;
+      monte.forEach(p => { soma += Number(p.preco); });
+      const agrupados = {};
+      monte.forEach(p => {
+        if (!agrupados[p.nome]) agrupados[p.nome] = { produto: p, quantidade: 0 };
+        agrupados[p.nome].quantidade++;
+      });
+      Object.values(agrupados).forEach(item => {
+        const p       = item.produto;
+        const qtd     = item.quantidade;
+        const subtotal = Number(p.preco) * qtd;
+        lista.innerHTML += `
+          <li>${p.nome} ${qtd > 1 ? `x${qtd}` : ""} - R$ ${formatarPreco(subtotal)}
+            <button class="btn-mini" onclick='removerUnidadeMonte(${JSON.stringify(p)})'>-</button>
+          </li>`;
+      });
+      total.innerText = "Total do PC: R$ " + formatarPreco(soma);
+    }
+
+    function finalizarPC() {
+      if (precisaEstarLogado()) return;
+      if (monte.length === 0) { msg("Adicione ao menos uma peça antes de finalizar a montagem."); return; }
+      if (!montagemCompleta()) { msg("Para finalizar a montagem, é necessário adicionar todos os componentes obrigatórios: processador, placa-mãe, memória RAM, armazenamento, fonte e gabinete."); return; }
+      carrinhoPC.push(...monte);
+      monte = [];
+      atualizarMonte();
+      atualizarCarrinho();
+      document.getElementById("produtosMonte").innerHTML = "";
+      msg("Montagem adicionada ao carrinho.");
+    }
+
+    function montagemCompleta() {
+      const obrigatorios = ["CPU", "PlacaMae", "RAM", "Fonte", "Gabinete"];
+      for (const tipo of obrigatorios) {
+        if (!monte.some(p => tipoEquivalente(p.tipo) === tipo)) return false;
+      }
+      return (
+        monte.some(p => tipoEquivalente(p.tipo) === "SSD") ||
+        monte.some(p => tipoEquivalente(p.tipo) === "HD")  ||
+        monte.some(p => tipoEquivalente(p.tipo) === "SSDNVME")
+      );
+    }
+
+    function agruparItensCompra(lista, origem) {
+      const agrupados = {};
+      lista.forEach(p => {
+        const chave = p.nome + "|" + origem;
+        if (!agrupados[chave]) agrupados[chave] = { produtoNome: p.nome, produtoTipo: p.tipo, preco: Number(p.preco), quantidade: 0, origem };
+        agrupados[chave].quantidade++;
+      });
+      return Object.values(agrupados);
+    }
+
+    async function finalizarCompra() {
+      const usuario = JSON.parse(localStorage.getItem("usuario"));
+      if (!usuario || !usuario.id) { msg("Faça login para finalizar a compra."); return; }
+      const todosItens = [...agruparItensCompra(carrinho, "Carrinho"), ...agruparItensCompra(carrinhoPC, "MontePC")];
+      if (!todosItens.length) { msg("Seu carrinho está vazio."); return; }
+      try {
+        const res  = await apiFetch(API_BASE + "/api/Compras/finalizar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ usuarioId: usuario.id, itens: todosItens })
+        });
+        const data = await res.json();
+        if (!res.ok) { msg(data.mensagem || "Não foi possível finalizar a compra."); return; }
+        carrinho = []; carrinhoPC = [];
+        atualizarCarrinho();
+        msg("Compra finalizada com sucesso.");
+      } catch (e) { msg("Erro ao finalizar compra."); console.error(e); }
+    }
+
+    async function mostrarMinhasCompras() {
+      if (!usuarioLogado) { msg("Faça login para ver suas compras."); return; }
+      try {
+        const res    = await apiFetch(`${API_BASE}/api/Compras/usuario/${usuarioLogado.id}`);
+        const compras = await res.json();
+        document.getElementById("usuarioLogadoArea").style.display  = "none";
+        document.getElementById("loginArea").style.display          = "none";
+        document.getElementById("criarContaArea").style.display     = "none";
+        document.getElementById("minhasComprasArea").style.display  = "block";
+        const lista = document.getElementById("listaMinhasCompras");
+        lista.innerHTML = "";
+
+        // Busca também as vendas do usuário para ter status individual
+        const resV = await apiFetch(`${API_BASE}/api/Vendas`);
+        const todasVendas = await resV.json();
+        const vendasUsuario = todasVendas.filter(v => v.usuarioNome === (usuarioLogado.nome || "Usuário") || true);
+        // Filtra por usuário via compraId
+        const comprasNaoNulas = compras.filter(c => c.status !== "Cancelada");
+
+        if (!comprasNaoNulas.length) { lista.innerHTML = "<p>Nenhuma compra encontrada.</p>"; return; }
+
+        comprasNaoNulas.forEach(compra => {
+          const idFormatado = "#" + String(compra.id).padStart(15, "0");
+          const vendasDaCompra = todasVendas.filter(v => v.compraId === compra.id);
+
+          // Determina status geral da compra com base nas vendas
+          const statusVendas = vendasDaCompra.map(v => v.status);
+          const statusFinaisCompra = ["Devolvida", "Perda", "Cancelada", "Entregue"];
+          let statusExibir = compra.status;
+          if (statusVendas.length > 0) {
+            if (statusVendas.every(s => s === "Em Preparo"))       statusExibir = "Em Preparo";
+            else if (statusVendas.every(s => s === "Em Transporte")) statusExibir = "Em Transporte";
+            else if (statusVendas.every(s => s === "Entregue"))    statusExibir = "Entregue";
+            else if (statusVendas.every(s => s === "Cancelada"))   statusExibir = "Cancelada";
+            else if (statusVendas.every(s => s === "Devolvida"))   statusExibir = "Devolvida";
+            else if (statusVendas.every(s => s === "Perda"))       statusExibir = "Perda";
+            else if (statusVendas.every(s => statusFinaisCompra.includes(s))) {
+              if (statusVendas.some(s => s === "Perda"))         statusExibir = "Perda";
+              else if (statusVendas.some(s => s === "Devolvida")) statusExibir = "Devolvida";
+              else                                                  statusExibir = "Parcial";
+            }
+            else statusExibir = "Parcial";
+          }
+
+          const podeCancelar = statusExibir === "Em Preparo";
+          const podeDevolver = statusExibir === "Entregue";
+
+          // Renderiza itens com botão devolver individual
+          const itensHtml = compra.itens.map(item => {
+            const venda = vendasDaCompra.find(v => v.produtoNome === item.produtoNome);
+            const statusItem = venda ? venda.status : statusExibir;
+            const podeDevItem = statusItem === "Entregue";
+            const devBtn = podeDevItem
+              ? `<button onclick="abrirModalDevolucao(${venda.id})" style="font-size:11px;padding:3px 8px;margin-left:8px;">↩ Devolver</button>`
+              : statusItem === "Devolvida" || statusItem === "Perda"
+                ? `<span style="color:${corStatus(statusItem)};font-size:11px;margin-left:8px;">[${statusItem}]</span>`
+                : "";
+            return `<li style="margin-bottom:6px;">${item.produtoNome} x${item.quantidade} — R$ ${Number(item.preco * item.quantidade).toLocaleString("pt-BR")} <span style="color:${corStatus(statusItem)}">[${statusItem}]</span>${devBtn}</li>`;
+          }).join("");
+
+          lista.innerHTML += `
+            <div class="bloco-compra" style="background:var(--superficie);border:1px solid var(--borda);border-radius:12px;padding:14px;margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                <button onclick="toggleItensCompra(${compra.id})">${idFormatado}</button>
+                <span style="color:${corStatus(statusExibir)};font-weight:bold;">${statusExibir}</span>
+                ${podeCancelar ? `<button class="btn-remover" onclick="cancelarCompra(${compra.id})">✕ Cancelar compra</button>` : ""}
+              </div>
+              <ul id="itens-compra-${compra.id}" style="display:none;margin-top:10px;">${itensHtml}</ul>
+            </div>`;
+        });
+      } catch (e) { msg("Erro ao carregar compras."); console.error(e); }
+    }
+
+    function toggleItensCompra(id) {
+      const ul = document.getElementById(`itens-compra-${id}`);
+      ul.style.display = ul.style.display === "none" ? "block" : "none";
+    }
+
+    async function cancelarCompra(id) {
+      confirmar("Tem certeza que deseja cancelar essa compra?", async () => {
+        try {
+          const res  = await apiFetch(`${API_BASE}/api/Compras/cancelar/${id}`, { method: "PUT" });
+          const data = await res.json();
+          if (!res.ok) { msg(data.mensagem || "Não foi possível cancelar a compra."); return; }
+          msg("Compra cancelada com sucesso.");
+
+          vendasCache = vendasCache.map(v => {
+            if (v.compraId === id) return { ...v, status: "Cancelada" };
+            return v;
+          });
+
+          const secaoVendas = document.getElementById("secaoVendas");
+          if (secaoVendas && secaoVendas.style.display !== "none") {
+            renderizarVendas(vendasCache);
+          }
+
+          const minhasComprasArea = document.getElementById("minhasComprasArea");
+          if (minhasComprasArea && minhasComprasArea.style.display !== "none") {
+            mostrarMinhasCompras();
+          }
+
+        } catch (e) { msg("Erro ao cancelar compra."); console.error(e); }
+      });
+    }
+
+    // ─── Estoque ─────────────────────────────────────────────────────────────────
+    async function carregarEstoque() {
+      try {
+        const res = await apiFetch(API_BASE + "/api/Produtos");
+        if (!res.ok) { console.error("Erro HTTP:", res.status); return; }
+        produtosEstoque = await res.json();
+        renderEstoque(produtosEstoque);
+      } catch (e) { console.error("Erro fetch:", e); msg("Erro ao carregar estoque."); }
+    }
+
+    function filtrarEstoque() {
+      const termo   = document.getElementById("buscaEstoque").value.trim();
+      const filtrado = produtosEstoque.filter(p => {
+        if (!termo) return true;
+        if (!isNaN(termo)) return String(p.id) === termo;
+        return (p.nome || "").toLowerCase().includes(termo.toLowerCase());
+      });
+      renderEstoque(filtrado);
+    }
+
+    function toggleEditarInline(id) {
+      produtoEditandoId = produtoEditandoId === id ? null : id;
+      filtrarEstoque();
+    }
+
+    function renderEstoque(lista) {
+      const div = document.getElementById("listaEstoque");
+      if (!lista.length) { div.innerHTML = "<p>Nenhum produto encontrado.</p>"; return; }
+      const grupos = {};
+      lista.forEach(p => { const tipo = p.tipo || "Outros"; if (!grupos[tipo]) grupos[tipo] = []; grupos[tipo].push(p); });
+      let html = "";
+      Object.keys(grupos).forEach(tipo => {
+        html += `
+          <h3 style="margin-top:20px;color:var(--primaria);">${tipo}</h3>
+          <table class="tabela-estoque">
+            <thead><tr><th>ID</th><th>Nome</th><th>Preço</th><th>Consumo</th><th>Socket</th><th>Qtd</th><th>Imagem</th><th>Potência</th></tr></thead>
+            <tbody>`;
+        grupos[tipo].forEach(p => {
+          html += `
+            <tr onclick="toggleEditarInline(${p.id}); event.stopPropagation();">
+              <td>${p.id}</td><td>${p.nome||"-"}</td>
+              <td>R$ ${Number(p.preco||0).toLocaleString("pt-BR")}</td>
+              <td>${p.consumoEnergia||0}W</td><td>${p.socket||"-"}</td><td>${p.quantidade||0}</td>
+              <td>${p.imagemUrl ? `<img src="${p.imagemUrl}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;">` : "-"}</td>
+              <td>${p.potencia||"-"}</td>
+            </tr>`;
+          if (produtoEditandoId === p.id) {
+            html += `
+              <tr><td colspan="8"><div class="editar-inline" onclick="event.stopPropagation()">
+                <input id="editNome"      value="${p.nome||""}"             placeholder="Nome do produto"   class="campo-login">
+                <input id="editPreco"     type="number" value="${p.preco||0}"   placeholder="Preço"        class="campo-login">
+                <input id="editSocket"    value="${p.socket||""}"           placeholder="Socket (ex: AM4)"  class="campo-login">
+                <input id="editConsumo"   type="number" value="${p.consumoEnergia||0}" placeholder="Consumo (W)" class="campo-login">
+                <input id="editQuantidade" type="number" value="${p.quantidade||0}" placeholder="Quantidade" class="campo-login">
+                <input type="file" id="editImagemFile" accept="image/png, image/jpeg" class="campo-login">
+                <button onclick="event.stopPropagation(); salvarEdicaoProduto(${p.id})">Salvar</button>
+                <button onclick="event.stopPropagation(); excluirProduto(${p.id})">Excluir</button>
+              </div></td></tr>`;
+          }
+        });
+        html += `</tbody></table>`;
+      });
+      div.innerHTML = html;
+    }
+
+    async function salvarEdicaoProduto(id) {
+      const produtoOriginal = produtosEstoque.find(p => p.id === id);
+      if (!produtoOriginal) return;
+      const fileInput = document.getElementById("editImagemFile");
+      let imagemBase64 = produtoOriginal.imagemUrl || null;
+      if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        imagemBase64 = await lerImagemReduzida(file); // diminui a foto antes de enviar
+      }
+      const produto = {
+        id,
+        nome:           document.getElementById("editNome").value,
+        tipo:           produtoOriginal.tipo,
+        preco:          Number(document.getElementById("editPreco").value),
+        socket:         document.getElementById("editSocket").value,
+        consumoEnergia: Number(document.getElementById("editConsumo").value),
+        quantidade:     Number(document.getElementById("editQuantidade").value),
+        imagemUrl:      imagemBase64,
+        potencia:       produtoOriginal.potencia || null
+      };
+      try {
+        const res = await apiFetch(`${API_BASE}/api/Produtos/${id}`, {
+          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(produto)
+        });
+        if (!res.ok) { msg(await mensagemErro(res, "Erro ao salvar.")); return; }
+        produtoEditandoId = null;
+        msg("Produto atualizado.");
+        carregarEstoque();
+      } catch { msg("Erro ao salvar."); }
+    }
+
+    function excluirProduto(id) {
+      confirmar("Tem certeza que deseja excluir?", async () => {
+        await apiFetch(`${API}/${id}`, { method: "DELETE" });
+        msg("Produto excluído");
+        await carregar();
+        await carregarEstoque();
+      });
+    }
+
+    async function criarProduto() {
+      const nome = document.getElementById("novoNome").value.trim();
+      const existe = produtosEstoque.some(p => (p.nome || "").toLowerCase() === nome.toLowerCase());
+      if (existe) { msg("Já existe um produto com esse nome."); document.querySelectorAll("#secaoNovoProduto input").forEach(i => i.value = ""); return; }
+      const fileInput = document.getElementById("novoImagemFile");
+      let imagemBase64 = null;
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        imagemBase64 = await lerImagemReduzida(file); // diminui a foto antes de enviar
+      }
+      const produto = {
+        nome,
+        tipo:           document.getElementById("novoTipo").value,
+        preco:          Number(document.getElementById("novoPreco").value),
+        socket:         document.getElementById("novoSocket").value,
+        consumoEnergia: Number(document.getElementById("novoConsumo").value),
+        quantidade:     Number(document.getElementById("novoQuantidade").value),
+        imagemUrl:      imagemBase64,
+        potencia:       Number(document.getElementById("novoPotencia").value) || null
+      };
+      try {
+        const res = await apiFetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(produto) });
+        if (!res.ok) { msg(await mensagemErro(res, "Erro ao criar produto.")); return; }
+        msg("Produto criado!");
+        await carregar();
+        await carregarEstoque();
+        if (tipoAtualMonte) filtrarTipoMonte(tipoAtualMonte);
+        document.querySelectorAll("#secaoNovoProduto input").forEach(i => i.value = "");
+      } catch { msg("Erro ao criar produto."); }
+    }
+
+    // ─── Filtro de preço ─────────────────────────────────────────────────────────
+    const rangeMin        = document.getElementById("rangeMin");
+    const rangeMax        = document.getElementById("rangeMax");
+    const valorRange      = document.getElementById("valorRange");
+    const valorRangeTexto = document.getElementById("valorRangeTexto");
+
+    function aplicarFiltro() {
+      let min = Number(rangeMin.value);
+      let max = Number(rangeMax.value);
+      if (min > max) [min, max] = [max, min];
+      valorRange.innerText      = `R$ ${min} até R$ ${max}`;
+      valorRangeTexto.innerText = `R$ ${min} - R$ ${max}`;
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+      const filtrados  = produtos.filter(p =>
+        Number(p.preco) >= min && Number(p.preco) <= max &&
+        (!termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca)))
+      );
+      if (document.getElementById("hardware").classList.contains("pagina-ativa")) mostrarHardware(filtrados);
+      if (tipoAtualMonte) mostrarMonte(filtrados.filter(p => tipoEquivalente(p.tipo) === tipoAtualMonte));
+      else mostrarMonte(filtrados);
+    }
+
+    rangeMin.addEventListener("input", aplicarFiltro);
+    rangeMax.addEventListener("input", aplicarFiltro);
+
+    document.addEventListener("click", function(e) {
+      const dentro = e.target.closest(".editar-inline");
+      if (!dentro && produtoEditandoId !== null) { produtoEditandoId = null; renderEstoque(produtosEstoque); }
+    });
+
+    // ─── Confirmar ───────────────────────────────────────────────────────────────
+    let acaoConfirmar = null;
+
+    function confirmar(msgTexto, callback) {
+      document.getElementById("confirmTexto").innerText        = msgTexto;
+      document.getElementById("confirmBox").style.display      = "block";
+      acaoConfirmar = callback;
+    }
+
+    function confirmarAcao(resp) {
+      document.getElementById("confirmBox").style.display = "none";
+      if (resp && acaoConfirmar) acaoConfirmar();
+      acaoConfirmar = null;
+    }
+
+    // ─── Init ────────────────────────────────────────────────────────────────────
+    const usuarioSalvo = JSON.parse(localStorage.getItem("usuario"));
+    if (usuarioSalvo && !usuarioSalvo.token) { localStorage.removeItem("usuario"); } // sessão antiga, sem token
+    if (usuarioSalvo && usuarioSalvo.token) usuarioLogado = usuarioSalvo;
+    atualizarAreaUsuario();
+    atualizarVisibilidadeCarrinho();
+    carregar().then(carregarCarrinhoSalvo); // depois dos produtos, traz o carrinho salvo
+
+    // ─── Atualização em tempo real (sem precisar apertar F5) ───────────────────
+    // A cada 3 segundos o site pergunta à API a "versão" do catálogo
+    // (GET /api/Produtos/versao). Esse número vem do banco e muda sempre que
+    // um produto é criado, alterado, excluído ou tem o estoque alterado
+    // (trigger de auditoria + procedure sp_VersaoCatalogo).
+    // Só quando a versão muda o site baixa os produtos de novo e redesenha
+    // as telas de Hardware, Monte seu PC, Carrinho e Estoque.
+    let versaoCatalogo = null;
+
+    async function verificarAtualizacoes() {
+      carregarCarrinhoSalvo(); // o carrinho pode ter mudado em outro aparelho
+      try {
+        const res = await fetch(API + "/versao");
+        if (!res.ok) return;
+        const dados = await res.json();
+        if (versaoCatalogo === null) { versaoCatalogo = dados.versao; return; } // primeira leitura
+        if (dados.versao === versaoCatalogo) return;                             // nada mudou
+        versaoCatalogo = dados.versao;
+        await atualizarTelasProdutos();
+      } catch (e) { /* sem conexão: tenta de novo na próxima rodada */ }
+    }
+
+    // Troca um produto guardado (no carrinho ou no PC montado) pela versão nova dele
+    function produtoAtualizado(p) {
+      return produtos.find(x => x.id === p.id) || p;
+    }
+
+    async function atualizarTelasProdutos() {
+      const res = await apiFetch(API);
+      if (!res.ok) return;
+      produtos = await res.json();
+
+      // Hardware e Monte seu PC: reaplica o filtro de preço/busca que já estava na tela
+      let min = Number(rangeMin.value), max = Number(rangeMax.value);
+      if (min > max) [min, max] = [max, min];
+      const termoBusca = document.getElementById("buscaMonte").value.toLowerCase();
+      const filtrados = produtos.filter(p =>
+        Number(p.preco) >= min && Number(p.preco) <= max &&
+        (!termoBusca || (p.nome && p.nome.toLowerCase().includes(termoBusca)))
+      );
+      mostrarHardware(filtrados);
+      mostrarMonte(tipoAtualMonte ? filtrados.filter(p => tipoEquivalente(p.tipo) === tipoAtualMonte) : filtrados);
+
+      // Carrinho e PC montado: atualiza nome e preço dos itens já escolhidos
+      carrinho   = carrinho.map(produtoAtualizado);
+      carrinhoPC = carrinhoPC.map(produtoAtualizado);
+      monte      = monte.map(produtoAtualizado);
+      atualizarCarrinho();
+      atualizarMonte();
+
+      // Estoque (painel do admin): só redesenha se ninguém estiver editando um produto
+      if (isAdminLogin() && produtoEditandoId === null) {
+        produtosEstoque = produtos;
+        filtrarEstoque();
+      }
+    }
+
+    // ─── Carrinho salvo no banco (o mesmo carrinho no site e no app) ───────────
+    // Toda vez que o carrinho muda, o site manda ele para a API (PUT /api/Carrinho),
+    // que grava na tabela CarrinhoItens (procedure sp_SalvarCarrinho).
+    // Ao abrir o site ou fazer login, o site busca o carrinho salvo (GET /api/Carrinho).
+    // A cada 3 segundos ele também confere se o carrinho mudou em outro aparelho.
+    const URL_CARRINHO = API_BASE + "/api/Carrinho";
+    // (variáveis assinaturaCarrinho, aplicandoCarrinho e timerSalvarCarrinho: declaradas no topo do script)
+
+    // Converte o carrinho do site (um item por unidade) no formato do banco
+    function carrinhoParaServidor() {
+      const itens = [];
+      [[carrinho, "Carrinho"], [carrinhoPC, "MontePC"]].forEach(([lista, origem]) => {
+        const qtd = {};
+        lista.forEach(p => { qtd[p.id] = (qtd[p.id] || 0) + 1; });
+        Object.keys(qtd).forEach(id => itens.push({ produtoId: Number(id), quantidade: qtd[id], origem }));
+      });
+      return itens;
+    }
+
+    function assinatura(itens) {
+      return JSON.stringify(itens
+        .map(i => ({ produtoId: i.produtoId, quantidade: i.quantidade, origem: i.origem }))
+        .sort((a, b) => (a.origem + a.produtoId).localeCompare(b.origem + b.produtoId)));
+    }
+
+    // Preenche o carrinho da tela com o que veio do banco
+    function aplicarCarrinhoDoServidor(itens) {
+      aplicandoCarrinho = true;
+      carrinho = []; carrinhoPC = [];
+      itens.forEach(i => {
+        const p = produtos.find(x => x.id === i.produtoId);
+        if (!p) return;
+        const destino = i.origem === "MontePC" ? carrinhoPC : carrinho;
+        for (let k = 0; k < i.quantidade; k++) destino.push(p);
+      });
+      atualizarCarrinho();
+      aplicandoCarrinho = false;
+      assinaturaCarrinho = assinatura(itens);
+    }
+
+    async function carregarCarrinhoSalvo() {
+      if (!usuarioLogado || !produtos.length) return;
+      try {
+        const res = await apiFetch(URL_CARRINHO);
+        if (!res.ok) return;
+        const itens = await res.json();
+        if (timerSalvarCarrinho) return; // há uma alteração deste site esperando para ser salva
+        if (assinatura(itens) !== assinaturaCarrinho) aplicarCarrinhoDoServidor(itens);
+      } catch (e) { /* sem conexão: tenta de novo depois */ }
+    }
+
+    function salvarCarrinho() {
+      if (!usuarioLogado || aplicandoCarrinho) return;
+      clearTimeout(timerSalvarCarrinho);
+      timerSalvarCarrinho = setTimeout(async () => {
+        const itens = carrinhoParaServidor();
+        try {
+          const res = await apiFetch(URL_CARRINHO, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ itens })
+          });
+          if (res.ok) {
+            const salvo = await res.json();
+            // o banco limita a quantidade ao estoque: se ajustou, mostra como ficou
+            if (assinatura(salvo) !== assinatura(itens)) aplicarCarrinhoDoServidor(salvo);
+            else assinaturaCarrinho = assinatura(salvo);
+          }
+        } catch (e) { /* sem conexão */ }
+        timerSalvarCarrinho = null;
+      }, 400);
+    }
+
+    setInterval(verificarAtualizacoes, 3000);
+    verificarAtualizacoes();
+
+    // ─── Dashboard (VERSÃO CORRIGIDA) ────────────────────────────────────────────
+    Chart.defaults.color       = "#1A2233";
+    Chart.defaults.borderColor = "rgba(15,42,95,0.10)";
+    Chart.defaults.responsive  = true;
+    Chart.defaults.maintainAspectRatio = false;
+
+    async function carregarDashboard() {
+      try {
+        const res   = await apiFetch(API_BASE + "/api/Vendas");
+        const vendas = await res.json();
+
+        const produtosMap = {};
+        const rendaDia  = {};
+        const rendaMes  = {};
+        const rendaAno  = {};
+        const perdasDia  = {};
+        const perdasMes  = {};
+        const perdasAno  = {};
+
+        // Para gráfico de status: contagem de vendas, devoluções e cancelamentos/perdas
+        let qtdVendas = 0, qtdDevolucoes = 0, qtdCancelamentos = 0, qtdPerdas = 0;
+
+        let total = 0;
+
+        vendas.forEach(v => {
+          const status = v.status || "Concluida";
+          const cancelada  = status === "Cancelada";
+          const devolvida  = status === "Devolvida";
+          const perda      = status === "Perda";
+          const ativa      = !cancelada && !devolvida && !perda;
+
+          const subtotal = v.preco * v.quantidade;
+
+          if (ativa)     { total += subtotal; qtdVendas++; }
+          if (devolvida) { total -= subtotal; qtdDevolucoes++; }
+          if (perda)     { total -= subtotal; qtdPerdas++; }
+          if (cancelada) qtdCancelamentos++;
+
+          if (!produtosMap[v.produtoNome]) produtosMap[v.produtoNome] = 0;
+          if (ativa) produtosMap[v.produtoNome] += v.quantidade;
+
+          const data = new Date(v.data);
+          const dia  = data.toLocaleDateString("pt-BR");
+          const mes  = `${data.getMonth() + 1}/${data.getFullYear()}`;
+          const ano  = data.getFullYear();
+
+          if (!rendaDia[dia])  rendaDia[dia]  = 0;
+          if (!rendaMes[mes])  rendaMes[mes]  = 0;
+          if (!rendaAno[ano])  rendaAno[ano]  = 0;
+          if (!perdasDia[dia]) perdasDia[dia] = 0;
+          if (!perdasMes[mes]) perdasMes[mes] = 0;
+          if (!perdasAno[ano]) perdasAno[ano] = 0;
+
+          if (cancelada || devolvida || perda) {
+            perdasDia[dia] += subtotal;
+            perdasMes[mes] += subtotal;
+            perdasAno[ano] += subtotal;
+          } else {
+            rendaDia[dia]  += subtotal;
+            rendaMes[mes]  += subtotal;
+            rendaAno[ano]  += subtotal;
+          }
+        });
+
+        document.getElementById("totalVendido").innerText = "R$ " + total.toLocaleString("pt-BR");
+        document.getElementById("totalPedidos").innerText = vendas.length;
+
+        const diasOrdenados = Object.keys(rendaDia).sort((a, b) => {
+          const [da, ma, ya] = a.split("/").map(Number);
+          const [db, mb, yb] = b.split("/").map(Number);
+          return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+        });
+        const rendaDiaOrd  = Object.fromEntries(diasOrdenados.map(k => [k, rendaDia[k]  || 0]));
+        const perdasDiaOrd = Object.fromEntries(diasOrdenados.map(k => [k, perdasDia[k] || 0]));
+
+        const mesesOrdenados = Object.keys(rendaMes).sort((a, b) => {
+          const [ma, ya] = a.split("/").map(Number);
+          const [mb, yb] = b.split("/").map(Number);
+          return new Date(ya, ma - 1) - new Date(yb, mb - 1);
+        });
+        const rendaMesOrd  = Object.fromEntries(mesesOrdenados.map(k => [k, rendaMes[k]  || 0]));
+        const perdasMesOrd = Object.fromEntries(mesesOrdenados.map(k => [k, perdasMes[k] || 0]));
+
+        const anosOrdenados = Object.keys(rendaAno).sort((a, b) => Number(a) - Number(b));
+        const rendaAnoOrd  = Object.fromEntries(anosOrdenados.map(k => [k, rendaAno[k]  || 0]));
+        const perdasAnoOrd = Object.fromEntries(anosOrdenados.map(k => [k, perdasAno[k] || 0]));
+
+        criarGraficoProdutos(produtosMap);
+        criarGraficoDia(rendaDiaOrd, perdasDiaOrd);
+        criarGraficoMes(rendaMesOrd, perdasMesOrd);
+        criarGraficoAno(rendaAnoOrd, perdasAnoOrd);
+        criarGraficoStatus(qtdVendas, qtdDevolucoes, qtdCancelamentos, qtdPerdas);
+
+      } catch (e) {
+        console.error(e);
+        msg("Erro ao carregar dashboard.");
+      }
+    }
+
+    function destruirGrafico(chart) { if (chart) chart.destroy(); }
+
+    // ── Fábrica de opções — evita shallow copy corrompendo scales ────────────────
+    function baseOpts(tooltipLabel) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 800, easing: "easeOutQuart" },
+        plugins: {
+          legend: { labels: { color: "#1A2233", font: { size: 12 }, padding: 16 } },
+          tooltip: {
+            backgroundColor: "rgba(15,42,95,0.95)",
+            borderColor: "rgba(29,78,216,0.4)",
+            borderWidth: 1,
+            titleColor: "#FFFFFF",
+            bodyColor: "#e2e8f0",
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: { label: tooltipLabel }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: "#5B6576", font: { size: 11 } },
+            grid:  { color: "rgba(15,42,95,0.08)" }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: "#5B6576",
+              font: { size: 11 },
+              callback: v => "R$ " + Number(v).toLocaleString("pt-BR")
+            },
+            grid: { color: "rgba(15,42,95,0.08)" }
+          }
+        }
+      };
+    }
+
+    const tooltipReais = ctx => ` R$ ${Number(ctx.parsed.y).toLocaleString("pt-BR")}`;
+    const tooltipQtd   = ctx => ` ${Number(ctx.parsed.x)} unidade(s)`;
+
+    // ── 1. Produtos mais vendidos — barras horizontais ───────────────────────────
+    function criarGraficoProdutos(dados) {
+      destruirGrafico(chartProdutos);
+      const canvas  = document.getElementById("graficoProdutos");
+      // Mostra só os 8 mais vendidos: com todos os produtos as barras ficavam
+      // amontoadas e os nomes um em cima do outro.
+      const TOP = 8;
+      const entradas = Object.entries(dados)
+        .filter(e => e[1] > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, TOP);
+      const opts    = baseOpts(tooltipQtd);
+      opts.scales.x.ticks.callback = v => v;
+      opts.scales.y.ticks.display  = false;
+      opts.scales.y.beginAtZero    = undefined;
+      opts.layout = { padding: { left: 160, right: 52 } };
+      opts.plugins = { ...opts.plugins, legend: { display: false } }; // o título já explica o gráfico
+
+      const labelPlugin = {
+        id: "produtoLabels",
+        afterDraw(chart) {
+          const { ctx, scales: { x, y }, data } = chart;
+          const dataset = data.datasets[0];
+          ctx.save();
+          data.labels.forEach((nome, i) => {
+            const meta  = chart.getDatasetMeta(0).data[i];
+            const yPos  = meta.y;
+            const valor = dataset.data[i];
+            const xFim  = x.getPixelForValue(valor);
+            ctx.textAlign    = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle    = "#5B6576";
+            ctx.font         = "12px Arial";
+            const nomeExibir = nome.length > 22 ? nome.substring(0, 21) + "…" : nome;
+            ctx.fillText(nomeExibir, x.left - 8, yPos);
+            ctx.textAlign    = "left";
+            ctx.fillStyle    = "#1D4ED8";
+            ctx.font         = "bold 12px Arial";
+            ctx.fillText(valor + " un.", xFim + 6, yPos);
+          });
+          ctx.restore();
+        }
+      };
+
+      chartProdutos = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: entradas.map(e => e[0]),
+          datasets: [{
+            label: "Quantidade vendida",
+            data: entradas.map(e => e[1]),
+            backgroundColor: "rgba(29,78,216,0.8)",
+            borderColor: "#1D4ED8",
+            borderWidth: 0,
+            borderRadius: 6,
+            borderSkipped: false,
+            barThickness: 22,          // barras com altura fixa e espaço entre elas
+            maxBarThickness: 26
+          }]
+        },
+        options: { ...opts, indexAxis: "y" },
+        plugins: [labelPlugin]
+      });
+    }
+
+    // ── 2. Renda por dia — linha com área preenchida ─────────────────────────────
+    function criarGraficoDia(dados, perdas) {
+      destruirGrafico(chartDia);
+      const canvas = document.getElementById("graficoDia");
+      const ctx    = canvas.getContext("2d");
+
+      const gradVerde    = ctx.createLinearGradient(0, 0, 0, 300);
+      gradVerde.addColorStop(0, "rgba(21,128,61,0.35)");
+      gradVerde.addColorStop(1, "rgba(21,128,61,0)");
+
+      const gradVermelho = ctx.createLinearGradient(0, 0, 0, 300);
+      gradVermelho.addColorStop(0, "rgba(185,28,28,0.35)");
+      gradVermelho.addColorStop(1, "rgba(185,28,28,0)");
+
+      chartDia = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: Object.keys(dados),
+          datasets: [
+            {
+              label: "Lucro diário",
+              data: Object.values(dados),
+              borderColor: "#15803D",
+              backgroundColor: gradVerde,
+              borderWidth: 2.5,
+              pointBackgroundColor: "#15803D",
+              pointRadius: 4,
+              pointHoverRadius: 7,
+              fill: true,
+              tension: 0.42
+            },
+            {
+              label: "Perdas",
+              data: Object.values(perdas),
+              borderColor: "#B91C1C",
+              backgroundColor: gradVermelho,
+              borderWidth: 2.5,
+              pointBackgroundColor: "#B91C1C",
+              pointRadius: 4,
+              pointHoverRadius: 7,
+              fill: true,
+              tension: 0.42
+            }
+          ]
+        },
+        options: baseOpts(tooltipReais)
+      });
+    }
+
+    // ── 3. Renda por mês — barras agrupadas ──────────────────────────────────────
+    function criarGraficoMes(dados, perdas) {
+      destruirGrafico(chartMes);
+      chartMes = new Chart(document.getElementById("graficoMes"), {
+        type: "bar",
+        data: {
+          labels: Object.keys(dados),
+          datasets: [
+            {
+              label: "Lucro mensal",
+              data: Object.values(dados),
+              backgroundColor: "rgba(29,78,216,0.8)",
+              borderColor: "#1D4ED8",
+              borderWidth: 0,
+              borderRadius: 6,
+              borderSkipped: false,
+              barPercentage: 0.7,
+              categoryPercentage: 0.8
+            },
+            {
+              label: "Perdas",
+              data: Object.values(perdas),
+              backgroundColor: "rgba(185,28,28,0.8)",
+              borderColor: "#B91C1C",
+              borderWidth: 0,
+              borderRadius: 6,
+              borderSkipped: false,
+              barPercentage: 0.7,
+              categoryPercentage: 0.8
+            }
+          ]
+        },
+        options: baseOpts(tooltipReais)
+      });
+    }
+
+    // ── 4. Renda por ano — barras com gradiente vertical ─────────────────────────
+    function criarGraficoAno(dados, perdas) {
+      destruirGrafico(chartAno);
+      const canvas = document.getElementById("graficoAno");
+      const ctx    = canvas.getContext("2d");
+
+      const gradAnual = ctx.createLinearGradient(0, 0, 0, 300);
+      gradAnual.addColorStop(0, "rgba(21,128,61,0.9)");
+      gradAnual.addColorStop(1, "rgba(21,128,61,0.2)");
+
+      const gradPerda = ctx.createLinearGradient(0, 0, 0, 300);
+      gradPerda.addColorStop(0, "rgba(185,28,28,0.9)");
+      gradPerda.addColorStop(1, "rgba(185,28,28,0.2)");
+
+      chartAno = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: Object.keys(dados),
+          datasets: [
+            {
+              label: "Lucro anual",
+              data: Object.values(dados),
+              backgroundColor: gradAnual,
+              borderColor: "#15803D",
+              borderWidth: 2,
+              borderRadius: 8,
+              borderSkipped: false,
+              barPercentage: 0.5,
+              categoryPercentage: 0.7
+            },
+            {
+              label: "Perdas",
+              data: Object.values(perdas),
+              backgroundColor: gradPerda,
+              borderColor: "#B91C1C",
+              borderWidth: 2,
+              borderRadius: 8,
+              borderSkipped: false,
+              barPercentage: 0.5,
+              categoryPercentage: 0.7
+            }
+          ]
+        },
+        options: baseOpts(tooltipReais)
+      });
+    }
+    // ── 5. Vendas / Devoluções / Cancelamentos — rosca ──────────────────────────
+    function criarGraficoStatus(vendas, devolucoes, cancelamentos, perdas) {
+      destruirGrafico(chartStatus);
+      chartStatus = new Chart(document.getElementById("graficoStatus"), {
+        type: "doughnut",
+        data: {
+          labels: ["Vendas ativas", "Devoluções", "Cancelamentos", "Perdas (defeito)"],
+          datasets: [{
+            data: [vendas, devolucoes, cancelamentos, perdas],
+            backgroundColor: [
+              "rgba(21,128,61,0.8)",
+              "rgba(194,65,12,0.8)",
+              "rgba(91,101,118,0.9)",
+              "rgba(127,29,29,0.85)"
+            ],
+            borderColor: ["#15803D","#C2410C","#5B6576","#7F1D1D"],
+            borderWidth: 2,
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 800 },
+          plugins: {
+            legend: { labels: { color: "#1A2233", font: { size: 12 }, padding: 14 }, position: "bottom" },
+            tooltip: {
+              backgroundColor: "rgba(15,42,95,0.95)",
+              borderColor: "rgba(29,78,216,0.4)",
+              borderWidth: 1,
+              titleColor: "#FFFFFF",
+              bodyColor: "#e2e8f0",
+              callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` }
+            }
+          }
+        }
+      });
+    }
+  </script>
+
+  <!-- Modal devolução -->
+  <div id="modalDevolucao" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99998;align-items:center;justify-content:center;">
+    <div style="background:var(--superficie);color:var(--texto);border:1px solid var(--borda);border-radius:14px;padding:24px;width:90%;max-width:400px;">
+      <h3 style="color:var(--primaria);margin-top:0;">Motivo da devolução</h3>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="radio" name="motivoDev" value="Desistencia"> Desistência
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="radio" name="motivoDev" value="Defeito"> Defeito
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="radio" name="motivoDev" value="Outro" onchange="document.getElementById('motivoOutroTexto').style.display='block'"> Outro
+      </label>
+      <input type="text" id="motivoOutroTexto" placeholder="Descreva o motivo..." class="campo-login" style="display:none;margin-bottom:10px;">
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button onclick="confirmarDevolucao()" style="flex:1;">Confirmar devolução</button>
+        <button class="btn-remover" onclick="fecharModalDevolucao()" style="flex:1;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmBox" class="confirm-box" style="display:none;">
+    <p id="confirmTexto"></p>
+    <button onclick="confirmarAcao(true)">Sim</button>
+    <button onclick="confirmarAcao(false)">Não</button>
+  </div>
+
+  <!-- VLibras -->
+  <div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper>
+      <div class="vw-plugin-top-wrapper"></div>
+    </div>
+  </div>
+  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <script>new window.VLibras.Widget('https://vlibras.gov.br/app');</script>
+
+</body>
+</html>

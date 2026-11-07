@@ -1,20 +1,23 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Text.RegularExpressions;
-using TechBuildAPI.Data;
-using TechBuildAPI.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TechBuildAPI.Services;
 
 namespace TechBuildAPI.Controllers
 {
+    // =====================================================================
+    // CAMADA DE APRESENTAÇÃO (API) - USUÁRIOS
+    // Regras (validação de e-mail/senha, BCrypt, JWT) ficam no UsuarioService.
+    // =====================================================================
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // por padrão tudo exige token; login e criar-conta liberam com [AllowAnonymous]
     public class UsuariosController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly UsuarioService _usuarios;
 
-        public UsuariosController(AppDbContext context)
+        public UsuariosController(UsuarioService usuarios)
         {
-            _context = context;
+            _usuarios = usuarios;
         }
 
         public class CriarContaDto
@@ -33,153 +36,66 @@ namespace TechBuildAPI.Controllers
 
         public class CriarAdminDto
         {
-            public int AdminId { get; set; }
             public string Email { get; set; } = "";
             public string Senha { get; set; } = "";
             public string ConfirmarSenha { get; set; } = "";
         }
 
+        [AllowAnonymous]
         [HttpPost("criar-conta")]
         public async Task<IActionResult> CriarConta([FromBody] CriarContaDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Nome) ||
-                string.IsNullOrWhiteSpace(dto.Email) ||
-                string.IsNullOrWhiteSpace(dto.Senha) ||
-                string.IsNullOrWhiteSpace(dto.ConfirmarSenha))
+            try
             {
-                return BadRequest(new { mensagem = "Preencha todos os campos." });
+                await _usuarios.CriarConta(dto.Nome, dto.Email, dto.Senha, dto.ConfirmarSenha);
+                return Ok(new { mensagem = "Conta criada com sucesso." });
             }
-
-            if (!dto.Email.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase) &&
-                !dto.Email.EndsWith("@hotmail.com", StringComparison.OrdinalIgnoreCase))
+            catch (RegraDeNegocioException ex)
             {
-                return BadRequest(new { mensagem = "Email inválido. Use apenas @gmail.com ou @hotmail.com." });
+                return BadRequest(new { mensagem = ex.Message });
             }
-
-            if (dto.Senha.Length < 5)
-            {
-                return BadRequest(new { mensagem = "A senha deve ter no mínimo 5 caracteres." });
-            }
-
-            if (!Regex.IsMatch(dto.Senha, @"^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$"))
-            {
-                return BadRequest(new { mensagem = "A senha só pode conter letras, números e caracteres especiais permitidos." });
-            }
-
-            if (dto.Senha != dto.ConfirmarSenha)
-            {
-                return BadRequest(new { mensagem = "As senhas não coincidem." });
-            }
-
-            bool existe = await _context.Usuarios.AnyAsync(u => u.Email == dto.Email);
-
-            if (existe)
-            {
-                return BadRequest(new { mensagem = "Já existe uma conta com esse email." });
-            }
-
-            var usuario = new Usuario
-            {
-                Nome = dto.Nome,
-                Email = dto.Email,
-                Senha = dto.Senha,
-                IsAdmin = false
-            };
-
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { mensagem = "Conta criada com sucesso." });
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Senha))
+            try
             {
-                return BadRequest(new { mensagem = "Preencha email e senha." });
+                var resultado = await _usuarios.Login(dto.Email, dto.Senha);
+                if (resultado == null)
+                    return Unauthorized(new { mensagem = "E-mail ou senha inválidos." });
+
+                var u = resultado.Usuario;
+                return Ok(new
+                {
+                    mensagem = "Login realizado com sucesso.",
+                    token = resultado.Token,
+                    id = u.Id,
+                    email = u.Email,
+                    isAdmin = u.IsAdmin,
+                    nome = u.Nome
+                });
             }
-
-            var usuarioEmail = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == dto.Email);
-
-            if (usuarioEmail == null)
+            catch (RegraDeNegocioException ex)
             {
-                return BadRequest(new { mensagem = "Email inválido." });
+                return BadRequest(new { mensagem = ex.Message });
             }
-
-            if (usuarioEmail.Senha != dto.Senha)
-            {
-                return BadRequest(new { mensagem = "Senha inválida." });
-            }
-
-            return Ok(new
-            {
-                mensagem = "Login realizado com sucesso.",
-                id = usuarioEmail.Id,
-                email = usuarioEmail.Email,
-                isAdmin = usuarioEmail.IsAdmin,
-                nome = usuarioEmail.Nome
-            });
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("criar-admin")]
         public async Task<IActionResult> CriarAdmin([FromBody] CriarAdminDto dto)
         {
-            if (dto.AdminId <= 0 ||
-                string.IsNullOrWhiteSpace(dto.Email) ||
-                string.IsNullOrWhiteSpace(dto.Senha) ||
-                string.IsNullOrWhiteSpace(dto.ConfirmarSenha))
+            try
             {
-                return BadRequest(new { mensagem = "Preencha todos os campos." });
+                await _usuarios.CriarAdmin(dto.Email, dto.Senha, dto.ConfirmarSenha);
+                return Ok(new { mensagem = "Administrador criado com sucesso." });
             }
-
-            var admin = await _context.Usuarios.FirstOrDefaultAsync(u => u.Id == dto.AdminId);
-
-            if (admin == null || !admin.IsAdmin)
+            catch (RegraDeNegocioException ex)
             {
-                return BadRequest(new { mensagem = "Apenas um administrador pode criar outro administrador." });
+                return BadRequest(new { mensagem = ex.Message });
             }
-
-            if (!dto.Email.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase) &&
-                !dto.Email.EndsWith("@hotmail.com", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new { mensagem = "Email inválido. Use apenas @gmail.com ou @hotmail.com." });
-            }
-
-            if (dto.Senha.Length < 5)
-            {
-                return BadRequest(new { mensagem = "A senha deve ter no mínimo 5 caracteres." });
-            }
-
-            if (!Regex.IsMatch(dto.Senha, @"^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:,.?/\\|]+$"))
-            {
-                return BadRequest(new { mensagem = "A senha só pode conter letras, números e caracteres especiais permitidos." });
-            }
-
-            if (dto.Senha != dto.ConfirmarSenha)
-            {
-                return BadRequest(new { mensagem = "As senhas não coincidem." });
-            }
-
-            bool existe = await _context.Usuarios.AnyAsync(u => u.Email == dto.Email);
-
-            if (existe)
-            {
-                return BadRequest(new { mensagem = "Já existe uma conta com esse email." });
-            }
-
-            var novoAdmin = new Usuario
-            {
-                Email = dto.Email,
-                Senha = dto.Senha,
-                IsAdmin = true
-            };
-
-            _context.Usuarios.Add(novoAdmin);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { mensagem = "Administrador criado com sucesso." });
         }
     }
 }
