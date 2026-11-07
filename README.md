@@ -1,139 +1,99 @@
-# TechHouse Industry
+# TechBuild – PIM IV (ADS – UNIP)
 
-Sistema de e-commerce para montagem e venda de computadores, desenvolvido como projeto integrador (PIM). Permite que usuários montem PCs, adicionem produtos ao carrinho, finalizem compras e acompanhem o status dos pedidos — com painel administrativo para gestão de estoque, vendas e dashboard com gráficos.
+Loja virtual de hardware com a função "Monte seu PC". Ela tem uma API em ASP.NET Core, um front-end web (HTML/CSS/JS), um app mobile em Flutter e um banco de dados SQL Server.
 
----
+## Estrutura do repositório
 
-## Tecnologias Utilizadas
-
-**Back-end**
-- ASP.NET Core (C#)
-- Entity Framework Core
-- SQL Server Express
-- Swagger (documentação da API)
-
-**Front-end**
-- HTML, CSS e JavaScript (vanilla)
-- Chart.js (gráficos do dashboard)
+| Pasta / arquivo | O que é |
+| --- | --- |
+| `TechHouse Industry/` | API REST em C# / ASP.NET Core |
+| `html/` | Front-end web (index.html, style.css) |
+| `mobile/` | App mobile em Flutter |
+| `bancoPIM_completo.sql` | Script completo do banco (tabelas e dados) |
+| `banco_etapa7_procedures_triggers.sql` | Procedures e triggers |
+| `docker-compose.yml`, `docker/` | Ambiente com Docker |
+| `diagramas/` | Diagramas do projeto |
 
 ---
 
-## Funcionalidades
-
-**Usuário**
-- Cadastro e login com validação de e-mail (@gmail.com / @hotmail.com) e senha
-- Navegação e filtragem de produtos por tipo, socket e faixa de preço
-- Montagem de PC com verificação de compatibilidade de socket e consumo de energia
-- Carrinho de compras com controle de quantidade
-- Finalização de compra com baixa automática de estoque
-- Acompanhamento de pedidos com opção de cancelamento (até "Em Preparo") e devolução (quando "Entregue")
-
-**Administrador**
-- Cadastro, edição e exclusão de produtos com imagem e dados técnicos
-- Gerenciamento de vendas com avanço de status: Em Preparo → Em Transporte → Entregue
-- Registro de devoluções com motivo (Defeito, Desistência, Outro)
-- Dashboard com gráficos de vendas, faturamento, estoque e devoluções
-- Criação de outros administradores
-
----
-
-## Estrutura do Projeto
+## 1. Baixar o projeto
 
 ```
-PIM/
-├── TechHouse Industry/        # Projeto ASP.NET Core
-│   ├── Controllers/           # Endpoints da API
-│   │   ├── ComprasController.cs
-│   │   ├── ProdutosController.cs
-│   │   ├── UsuariosController.cs
-│   │   └── VendasController.cs
-│   ├── Models/                # Entidades do banco
-│   │   ├── Compra.cs
-│   │   ├── CompraItem.cs
-│   │   ├── Produto.cs
-│   │   ├── Usuario.cs
-│   │   └── Vendas.cs
-│   ├── Data/                  # Contexto do Entity Framework
-│   ├── Program.cs             # Configuração da aplicação
-│   └── appsettings.json       # String de conexão com o banco
-├── html/
-│   ├── index.html             # Front-end principal
-│   └── style.css              # Estilos globais
-└── bancoPIM.sql               # Script de criação do banco de dados
+git clone https://github.com/Thallis12/pim.git
+cd pim
 ```
 
 ---
 
-## Como Executar
+## Opção A – Rodar com Docker (mais fácil)
 
-### Pré-requisitos
-- .NET 8 SDK
-- SQL Server Express
-- Visual Studio 2022 ou VS Code
+**Precisa ter instalado:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-### Passo a passo
-
-1. **Clone o repositório**
-   ```bash
-   git clone https://github.com/Thallis12/pim.git
-   cd pim
+1. Copie o arquivo de exemplo de configuração:
    ```
-
-2. **Configure o banco de dados**
-
-   Execute o script `bancoPIM.sql` no SQL Server Management Studio (SSMS) para criar o banco `TechHouse IndustryDB`.
-
-3. **Configure a string de conexão**
-
-   Em `appsettings.json`, ajuste o servidor conforme sua instância:
-   ```json
-   "ConnectionStrings": {
-     "DefaultConnection": "Server=SEU_SERVIDOR\\SQLEXPRESS;Database=TechHouse IndustryDB;Trusted_Connection=True;TrustServerCertificate=True;"
-   }
+   copy env.exemplo .env
    ```
-
-4. **Execute a API**
-   ```bash
-   cd "TechHouse Industry"
-   dotnet run
+   (no Linux/Mac: `cp env.exemplo .env`)
+2. Abra o `.env` e, se quiser, troque a senha do banco.
+3. Suba tudo:
    ```
-   A API estará disponível em `https://localhost:{porta}` com Swagger em `/swagger`.
+   docker compose up -d --build
+   ```
+4. Veja no `docker-compose.yml` em quais portas a API e o banco ficaram disponíveis.
 
-5. **Abra o front-end**
-
-   Abra o arquivo `html/index.html` diretamente no navegador.
+Para desligar: `docker compose down`
 
 ---
 
-## Endpoints Principais da API
+## Opção B – Rodar sem Docker
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | `/api/Usuarios/criar-conta` | Cadastro de usuário |
-| POST | `/api/Usuarios/login` | Login |
-| GET | `/api/Produtos` | Listar produtos |
-| POST | `/api/Produtos` | Cadastrar produto (admin) |
-| PUT | `/api/Produtos/{id}` | Editar produto (admin) |
-| DELETE | `/api/Produtos/{id}` | Remover produto (admin) |
-| POST | `/api/Compras/finalizar` | Finalizar compra |
-| GET | `/api/Compras/usuario/{id}` | Pedidos do usuário |
-| PUT | `/api/Compras/cancelar/{id}` | Cancelar compra |
-| GET | `/api/Vendas` | Listar vendas (admin) |
-| PUT | `/api/Vendas/avancar-status/{id}` | Avançar status (admin) |
-| PUT | `/api/Vendas/devolver/{id}` | Registrar devolução |
+**Precisa ter instalado:**
+- [.NET SDK](https://dotnet.microsoft.com/download) (a mesma versão indicada no `TechHouse Industry.csproj`)
+- [SQL Server](https://www.microsoft.com/sql-server/sql-server-downloads) (a versão Express serve) e o [SSMS](https://learn.microsoft.com/sql/ssms/download-sql-server-management-studio-ssms)
 
----
+### 1. Criar o banco
+1. Abra o SSMS e conecte no seu SQL Server.
+2. Abra e execute o `bancoPIM_completo.sql`.
+3. Depois, abra e execute o `banco_etapa7_procedures_triggers.sql`.
 
-## Status dos Pedidos
+### 2. Configurar a API
+Abra `TechHouse Industry/TechHouse Industry/appsettings.json` e ajuste a connection string para o seu SQL Server. Exemplo:
 
-```
-Em Preparo → Em Transporte → Entregue
-                                 ↓
-                           Devolvida / Perda
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Database=NOME_DO_BANCO;Trusted_Connection=True;TrustServerCertificate=True;"
+}
 ```
 
-- **Cancelada** — cliente cancela até "Em Preparo"
-- **Devolvida** — devolução por desistência (volta ao estoque)
-- **Perda** — devolução por defeito (não volta ao estoque)
+### 3. Rodar a API
+```
+cd "TechHouse Industry/TechHouse Industry"
+dotnet run
+```
+O terminal mostra o endereço da API, por exemplo `https://localhost:7011`. Para ver e testar os endpoints, abra `/swagger` nesse endereço.
+
+### 4. Abrir o site
+Abra o arquivo `html/index.html` no navegador. Se a API estiver em outra porta, altere a constante `API` no início do script do `index.html`.
 
 ---
+
+## App mobile (Flutter)
+
+**Precisa ter instalado:** [Flutter SDK](https://docs.flutter.dev/get-started/install). Outra opção é abrir a pasta `mobile/` direto no [FlutLab](https://flutlab.io).
+
+```
+cd mobile
+flutter pub get
+flutter run
+```
+
+> No emulador Android, `localhost` aponta para o próprio emulador. Para acessar a API rodando no seu PC, use `10.0.2.2` no lugar de `localhost`.
+
+---
+
+## Integrantes
+- Cauê Alexandre Souza Santos – H683BI2
+- João Pedro Ribeiro Barrozo – H596548
+- Luiz Felipe Requião Lemos – R649DE3
+- Thallis Andrade Souza – G757IC4
+- Vinicius Braga de Morais – F3627H2
