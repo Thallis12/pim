@@ -294,12 +294,12 @@ SET IDENTITY_INSERT [dbo].[Produtos] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Usuarios] ON 
 
-INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (1, N'teste@teste.com', N'123456', 0, N'teste@teste.com')
-INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (2, N'batata@gmail.com', N'Fgas@1988', 0, N'batata@gmail.com')
-INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (3, N'admin@gmail.com', N'12345', 1, N'Administrador')
-INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (4, N'admin2@gmail.com', N'12345', 1, N'admin2@gmail.com')
-INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (5, N'fefef@gmail.com', N'12345', 0, N'fefefes')
-INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (6, N'hrugb@gmail.com', N'12345', 0, N'ef5')
+INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (1, N'teste@teste.com', N'$2a$11$.bAzTAt41z/XkdnVDpXccuIpwKSqEM5Qr6euKTrVyuJXnped.09ka', 0, N'teste@teste.com')
+INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (2, N'batata@gmail.com', N'$2a$11$vjcYqOFdozQvQghaNqe.8.2mRAMRjcMI58.hw0CkwuPZDdoMhc4xi', 0, N'batata@gmail.com')
+INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (3, N'admin@gmail.com', N'$2a$11$xj/u4DGLHfJL8/lINQVjc.BxD1M7NvEmMepXAuGqie9U08rLfZtfy', 1, N'Administrador')
+INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (4, N'admin2@gmail.com', N'$2a$11$S/MTlcjgP9rzEIJzKdUxDuMscm1W8zsU7h.yBp21Obnf8XUp5ZEGy', 1, N'admin2@gmail.com')
+INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (5, N'fefef@gmail.com', N'$2a$11$NgDKR8yeu.OsyDZsDbXU.uHs2f5YE330q9Doc1ROzpQ283euBSU4K', 0, N'fefefes')
+INSERT [dbo].[Usuarios] ([Id], [Email], [Senha], [IsAdmin], [Nome]) VALUES (6, N'hrugb@gmail.com', N'$2a$11$8MspWIjZfa.9gfbYFSdHguvaivuXaWF08cAdVv.Jj78C7LMFiIAYO', 0, N'ef5')
 SET IDENTITY_INSERT [dbo].[Usuarios] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Vendas] ON 
